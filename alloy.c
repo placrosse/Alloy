@@ -34,14 +34,21 @@ int main()
 		tokens = str_parse(input);
 		if (str_cmp(input, exit_string) == 0)
 			running = 0;
+		else if (str_cmp(input, cls_string) == 0)
+		{
+			for (int i=0; i<25; i++)
+				b_output("\n");
+		}
 		else if (str_cmp(input, ver_string) == 0)
 			b_output(alloy_version);
 		else if (str_cmp(input, help_string) == 0)
-			b_output("Available commands: ver, help, exit\n");
+			b_output("Available commands: ver, cls, help, exit\n");
 		else
-			b_output("Unknown command\n");
+		{
+			if (tokens > 0)
+				b_output("Unknown command\n");
+		}
 	}
-	b_output(quit_string);
 }
 
 /* string compare
@@ -49,7 +56,11 @@ int main()
  */
 int str_cmp(unsigned char str1[], unsigned char str2[])
 {
-	int flag = -1;
+	int flag = 1;
+
+	if (str1[0] == '\0' && str2[0] == '\0')
+		return 0;
+
 	for (int i=0; str1[i] != '\0'; i++)
 	{
 		if (str1[i] == str2[i])
