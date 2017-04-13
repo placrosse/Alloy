@@ -56,16 +56,21 @@ int main()
  */
 int str_cmp(unsigned char str1[], unsigned char str2[])
 {
-	if (str1[0] == '\0' && str2[0] == '\0')
+	int i = 0;
+
+	if (str1[0] == '\0' && str2[0] == '\0') // Check if both strings are empty
 		return 0;
 
-	for (int i=0; str1[i] != '\0'; i++)
+	for (i=0; str1[i] != '\0'; i++) // Compare strings until end of first
 	{
 		if (str1[i] != str2[i])
 			return 1;
 	}
 
-	return 0;
+	if (str2[i] != '\0') // Check to make sure str2 was same length
+		return 1;
+
+	return 0; // Otherwise they are equal
 }
 
 /* string parse
