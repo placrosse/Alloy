@@ -18,7 +18,7 @@ unsigned char exit_string[] = "exit";
 unsigned char help_string[] = "help";
 
 /* Built-in functions*/
-int str_cmp(unsigned char str1[], unsigned char str2[]);
+int str_cmp(unsigned char *str1, unsigned char *str2);
 int str_parse(unsigned char str[]);
 void str_chomp(unsigned char str[]);
 int str_len(unsigned char str[]);
@@ -54,23 +54,18 @@ int main()
 /* string compare
  * returns 0 if equal, 1 if not equal
  */
-int str_cmp(unsigned char str1[], unsigned char str2[])
+int str_cmp(unsigned char *str1, unsigned char *str2)
 {
-	int i = 0;
-
-	if (str1[0] == '\0' && str2[0] == '\0') // Check if both strings are empty
-		return 0;
-
-	for (i=0; str1[i] != '\0'; i++) // Compare strings until end of first
+	while ((*str1 == *str2) && *str1)
 	{
-		if (str1[i] != str2[i])
-			return 1;
+		str1++;
+		str2++;
 	}
 
-	if (str2[i] != '\0') // Check to make sure str2 was same length
+	if ((((int) (unsigned char) *str1) - ((int) (unsigned char) *str2)) == 0)
+		return 0;
+	else
 		return 1;
-
-	return 0; // Otherwise they are equal
 }
 
 /* string parse
