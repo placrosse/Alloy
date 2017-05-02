@@ -6,12 +6,12 @@ SECTIONS
 	. = 0x0000000000200000;
 	.text : {
 		*(.text)
-		. = ALIGN(4096);
+		. = ALIGN(8);
 	}
 	.data : {
 		*(.data)
 		*(.rodata)
-		. = ALIGN(4096);
+		. = ALIGN(8);
 	}
 	__bss_start = .;
 	.bss : {
