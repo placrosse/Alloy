@@ -5,4 +5,4 @@ objcopy --remove-section .comment alloy.o
 objcopy --remove-section .eh_frame alloy.o
 objcopy --remove-section .comment libBareMetal.o
 objcopy --remove-section .eh_frame libBareMetal.o
-ld -T app.ld -o alloy.app alloy.o libBareMetal.o
+ld -T app.ld -o alloy.bin alloy.o libBareMetal.o
