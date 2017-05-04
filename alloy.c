@@ -32,10 +32,14 @@ int str_cmp(unsigned char *str1, unsigned char *str2);
 int str_parse(unsigned char str[]);
 void str_chomp(unsigned char str[]);
 int str_len(unsigned char str[]);
+void list_files();
+void mem_cpy(void *dest, void *src, u64 n);
 
 /* Program code */
 int main()
 {
+	for (int i=0; i<25; i++)
+		b_output("\n");
 	b_output(alloy_version);
 	while (running == 1)
 	{
@@ -51,6 +55,8 @@ int main()
 		}
 		else if (str_cmp(input, ver_string) == 0)
 			b_output(alloy_version);
+		else if (str_cmp(input, dir_string) == 0)
+			list_files();
 		else if (str_cmp(input, help_string) == 0)
 			b_output("Available commands: ver, cls, help, exit\n");
 		else
@@ -139,4 +145,46 @@ int str_len(unsigned char str[])
 	while (str[count] != '\0')
 		count++;
 	return count;
+}
+
+void list_files()
+{
+	u8 directory[4096];
+	u8 entry[64];
+	u64 retval, i;
+
+	retval = b_disk_read(directory, 1, 1, 0);
+	if (retval == 0)
+		b_output("error\n");
+	else
+	{
+		for (i=0; i<64; i++)
+		{
+			mem_cpy(entry, directory+(i*64), 64);
+			if (entry[0] == 0x00)
+			{
+				i = 64;
+			}
+			else if (entry[0] == 0x01)
+			{
+				
+			}
+			else
+			{
+				b_output((const char *)entry);
+				b_output("\n");
+			}
+		}
+	}
+}
+
+void mem_cpy(void *dest, void *src, u64 n)
+{
+	u64 i;
+	
+	u8 *cdst = (u8 *)dest;
+	u8 *csrc = (u8 *)src;
+	
+	for (i=0; i<n; i++)
+		cdst[i] = csrc[i];
 }
