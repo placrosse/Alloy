@@ -52,7 +52,7 @@ unsigned long b_mem_release(unsigned long *mem, unsigned long nbr) {
 }
 
 
-void b_ethernet_tx(void *mem, unsigned long len, unsigned long iid) {
+void b_ethernet_tx(const void *mem, unsigned long len, unsigned long iid) {
 	asm volatile ("call *0x00100050" : : "S"(mem), "c"(len), "d"(iid));
 }
 
@@ -69,7 +69,7 @@ unsigned long b_disk_read(void *mem, unsigned long start, unsigned long num, uns
 	return tlong;
 }
 
-unsigned long b_disk_write(void *mem, unsigned long start, unsigned long num, unsigned long disknum) {
+unsigned long b_disk_write(const void *mem, unsigned long start, unsigned long num, unsigned long disknum) {
 	unsigned long tlong = 0;
 	asm volatile ("call *0x00100068" : "=c"(tlong) : "a"(start), "c"(num), "d"(disknum), "S"(mem));
 	return tlong;

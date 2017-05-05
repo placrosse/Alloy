@@ -25,12 +25,12 @@ unsigned long b_mem_release(unsigned long *mem, unsigned long nbr);
 unsigned long b_mem_allocate(unsigned long *mem, unsigned long nbr);
 
 // Network
-void b_ethernet_tx(void *mem, unsigned long len, unsigned long iid);
+void b_ethernet_tx(const void *mem, unsigned long len, unsigned long iid);
 unsigned long b_ethernet_rx(void *mem, unsigned long iid);
 
 // Disk
 unsigned long b_disk_read(void *mem, unsigned long start, unsigned long num, unsigned long disknum);
-unsigned long b_disk_write(void *mem, unsigned long start, unsigned long num, unsigned long disknum);
+unsigned long b_disk_write(const void *mem, unsigned long start, unsigned long num, unsigned long disknum);
 
 // Misc
 unsigned long b_system_config(unsigned long function, unsigned long var);
