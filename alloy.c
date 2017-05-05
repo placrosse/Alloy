@@ -2,6 +2,8 @@
 /* Copyright 2017 Return Infinity, Inc */
 
 /* Global includes */
+#include <bmfs/bmfs.h>
+#include <errno.h>
 #include "libBareMetal.h"
 
 /* Global typedefs */
@@ -18,6 +20,9 @@ typedef signed long long s64;
 unsigned short running = 1;
 unsigned char input[256];
 int tokens;
+uint64_t disk_offset = 0;
+uint64_t disk_length = 1024 * 1024 * 6;
+unsigned char disk_section[4096];
 
 /* Strings */
 const char alloy_version[] = "Alloy v0.0.1\n";
@@ -33,7 +38,14 @@ int str_parse(unsigned char str[]);
 void str_chomp(unsigned char str[]);
 int str_len(unsigned char str[]);
 void list_files();
-void mem_cpy(void *dest, void *src, u64 n);
+int load_app(const unsigned char app[]);
+void mem_cpy(void *dest, const void *src, u64 n);
+
+/* disk functions */
+int alloy_seek(void *disk_data, int64_t offset, int whence);
+int alloy_tell(void *disk_data, int64_t *offset);
+int alloy_read(void *disk_data, void *buf, uint64_t buf_len, uint64_t *read_len);
+int alloy_write(void *disk_data, const void *buf, uint64_t buf_len, uint64_t *write_len);
 
 /* Program code */
 int main()
@@ -149,42 +161,125 @@ int str_len(unsigned char str[])
 
 void list_files()
 {
-	u8 directory[4096];
-	u8 entry[64];
-	u64 retval, i;
+	int err;
+	uint64_t i;
+	struct BMFSEntry *entry;
+	struct BMFSDir dir;
+	struct BMFSDisk disk;
 
-	retval = b_disk_read(directory, 1, 1, 0);
-	if (retval == 0)
-		b_output("error\n");
-	else
+	disk.disk = NULL;
+	disk.seek = alloy_seek;
+	disk.tell = alloy_tell;
+	disk.read = alloy_read;
+	disk.write = alloy_write;
+
+	err = bmfs_disk_read_dir(&disk, &dir);
+	if (err != 0)
 	{
-		for (i=0; i<64; i++)
-		{
-			mem_cpy(entry, directory+(i*64), 64);
-			if (entry[0] == 0x00)
-			{
-				i = 64;
-			}
-			else if (entry[0] == 0x01)
-			{
-				
-			}
-			else
-			{
-				b_output((const char *)entry);
-				b_output("\n");
-			}
-		}
+		b_output("failed to read directory");
+		return;
+	}
+
+	for (i = 0; i < 64; i++)
+	{
+		entry = &dir.Entries[i];
+		if (bmfs_entry_is_empty(entry))
+			continue;
+		else if (bmfs_entry_is_terminator(entry))
+			continue;
+
+		b_output(entry->FileName);
+		b_output("\n");
 	}
 }
 
-void mem_cpy(void *dest, void *src, u64 n)
+int load_app(const unsigned char app[])
+{
+	(void) app;
+	return 0;
+}
+
+void mem_cpy(void *dest, const void *src, u64 n)
 {
 	u64 i;
 	
 	u8 *cdst = (u8 *)dest;
-	u8 *csrc = (u8 *)src;
+	const u8 *csrc = (const u8 *)src;
 	
 	for (i=0; i<n; i++)
 		cdst[i] = csrc[i];
 }
+
+int alloy_seek(void *disk_data, int64_t offset, int whence)
+{
+	(void) disk_data;
+
+	if (whence == SEEK_SET)
+		disk_offset = offset;
+	else if (whence == SEEK_END)
+		disk_offset = disk_length - offset;
+	else if (whence == SEEK_CUR)
+		disk_offset += offset;
+	else
+		return -EINVAL;
+
+	return 0;
+}
+
+int alloy_tell(void *disk_data, int64_t *offset)
+{
+	(void) disk_data;
+	*offset = disk_offset;
+	return 0;
+}
+
+int alloy_read(void *disk_data, void *buf, uint64_t buf_len, uint64_t *read_len)
+{
+	(void) disk_data;
+
+	uint64_t sections_read;
+	uint64_t bytes_read;
+
+	if (buf_len > 4096)
+		buf_len = 4096;
+
+	sections_read = b_disk_read(disk_section, disk_offset / 4096, 1, 0);
+
+	bytes_read = sections_read * 4096;
+	if (bytes_read > buf_len)
+		bytes_read = buf_len;
+
+	if (read_len != NULL)
+		*read_len = bytes_read;
+
+	mem_cpy(buf, &disk_section[disk_offset % 4096], bytes_read);
+
+	return 0;
+}
+
+int alloy_write(void *disk_data, const void *buf, uint64_t buf_len, uint64_t *write_len)
+{
+	(void) disk_data;
+
+	uint64_t sections_read;
+	uint64_t sections_write;
+	uint64_t bytes_write;
+
+	sections_read = b_disk_read(disk_section, disk_offset / 4096, 1, 0);
+	if (sections_read == 0)
+		return -EIO;
+
+	mem_cpy(&disk_section[disk_offset % 4096], buf, buf_len);
+
+	sections_write = b_disk_write(disk_section, disk_offset / 4096, 1, 0);
+
+	bytes_write = sections_write * 4096;
+	if (bytes_write > buf_len)
+		bytes_write = buf_len;
+
+	if (write_len != NULL)
+		*write_len = bytes_write;
+
+	return 0;
+}
+
