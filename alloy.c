@@ -6,6 +6,9 @@
 #include <errno.h>
 #include "libBareMetal.h"
 
+/* Global macros */
+#define BAREMETAL_PAGE_SIZE (2 * 1024 * 1024)
+
 /* Global typedefs */
 typedef unsigned char u8;
 typedef unsigned short u16;
@@ -60,6 +63,8 @@ int main()
 		tokens = str_parse(input);
 		if (str_cmp(input, exit_string) == 0)
 			running = 0;
+		else if (load_app(input) == 0)
+			continue;
 		else if (str_cmp(input, cls_string) == 0)
 		{
 			for (int i=0; i<25; i++)
@@ -195,7 +200,60 @@ void list_files()
 
 int load_app(const unsigned char app[])
 {
-	(void) app;
+	int err;
+	uint64_t app_offset;
+	struct BMFSEntry *app_entry;
+	struct BMFSDir dir;
+	struct BMFSDisk disk;
+	void *app_data = NULL;
+	uint64_t app_size = 0;
+	uint64_t app_pages = 0;
+
+	disk.disk = NULL;
+	disk.tell = alloy_tell;
+	disk.seek = alloy_seek;
+	disk.read = alloy_read;
+	disk.write = alloy_write;
+
+	err = bmfs_disk_read_dir(&disk, &dir);
+	if (err != 0)
+		return err;
+
+	app_entry = bmfs_dir_find(&dir, (const char *)(app));
+	if (app_entry == NULL)
+	{
+		return -ENOENT;
+	}
+	else
+	{
+		b_output("found program\n");
+	}
+
+	err = bmfs_entry_get_offset(app_entry, &app_offset);
+	if (err != 0)
+		return err;
+
+	err = bmfs_disk_seek(&disk, app_offset, SEEK_SET);
+	if (err != 0)
+		return err;
+
+	app_size = app_entry->FileSize;
+
+	app_pages = app_size / BAREMETAL_PAGE_SIZE;
+	/* because of integer truncation when app size % page size != 0,
+	 * round up one page to make sure enough memory is available */
+	app_pages++;
+
+	b_mem_allocate(&app_data, app_pages);
+
+	err = bmfs_disk_read(&disk, app_data, app_size, &app_size);
+	if (err != 0)
+		return err;
+
+	b_smp_set(app_data, NULL /* data pointer */, 1 /* cpu index */);
+
+	/* TODO : b_smp_wait(...); b_mem_release(app_data, app_pages); */
+
 	return 0;
 }
 
