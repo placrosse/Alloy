@@ -39,15 +39,19 @@ unsigned long b_smp_config() {
 }
 
 
-unsigned long b_mem_allocate(unsigned long *mem, unsigned long nbr) {
+unsigned long b_mem_allocate(void **mem, unsigned long nbr) {
+	unsigned long mem_addr;
 	unsigned long tlong;
-	asm volatile ("call *0x00100040" : "=a"(*(mem)), "=c"(tlong) : "c"(nbr));
+	asm volatile ("call *0x00100040" : "=a"(mem_addr), "=c"(tlong) : "c"(nbr));
+	(*mem) = (void *)(mem_addr);
 	return tlong;
 }
 
-unsigned long b_mem_release(unsigned long *mem, unsigned long nbr) {
+unsigned long b_mem_release(void **mem, unsigned long nbr) {
 	unsigned long tlong;
-	asm volatile ("call *0x00100048" : "=c"(tlong) : "a"(*(mem)), "c"(nbr));
+	unsigned long mem_addr;
+	mem_addr = (unsigned long)(*mem);
+	asm volatile ("call *0x00100048" : "=c"(tlong) : "a"(mem_addr), "c"(nbr));
 	return tlong;
 }
 

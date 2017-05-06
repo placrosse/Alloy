@@ -21,8 +21,8 @@ unsigned long b_smp_set(void *codeptr, void *dataptr, unsigned long cpu);
 unsigned long b_smp_config();
 
 // Memory
-unsigned long b_mem_release(unsigned long *mem, unsigned long nbr);
-unsigned long b_mem_allocate(unsigned long *mem, unsigned long nbr);
+unsigned long b_mem_release(void *mem, unsigned long nbr);
+unsigned long b_mem_allocate(void **mem, unsigned long nbr);
 
 // Network
 void b_ethernet_tx(const void *mem, unsigned long len, unsigned long iid);
