@@ -205,9 +205,11 @@ int load_app(const unsigned char app[])
 	struct BMFSEntry *app_entry;
 	struct BMFSDir dir;
 	struct BMFSDisk disk;
-	void *app_data = NULL;
+	char *app_data = NULL;
 	uint64_t app_size = 0;
 	uint64_t app_pages = 0;
+	uint64_t read_count = 0;
+	uint64_t total_read_count = 0;
 
 	disk.disk = NULL;
 	disk.tell = alloy_tell;
@@ -238,12 +240,19 @@ int load_app(const unsigned char app[])
 	 * round up one page to make sure enough memory is available */
 	app_pages++;
 
-	b_mem_allocate(&app_data, app_pages);
+	b_mem_allocate((void **) &app_data, app_pages);
 
-	err = bmfs_disk_read(&disk, app_data, app_size, &app_size);
-	if (err != 0)
-		return err;
+	total_read_count = 0;
+	while (total_read_count < app_size)
+	{
+		read_count = app_size - total_read_count;
 
+		err = bmfs_disk_read(&disk, &app_data[total_read_count], read_count, &read_count);
+		if (err != 0)
+			return err;
+
+		total_read_count += read_count;
+	}
 	b_smp_set(app_data, NULL /* data pointer */, 1 /* cpu index */);
 
 	/* TODO : b_smp_wait(...); b_mem_release(app_data, app_pages); */
@@ -306,6 +315,8 @@ int alloy_read(void *disk_data, void *buf, uint64_t buf_len, uint64_t *read_len)
 
 	mem_cpy(buf, &disk_section[disk_offset % 4096], bytes_read);
 
+	disk_offset += bytes_read;
+
 	return 0;
 }
 
@@ -331,6 +342,8 @@ int alloy_write(void *disk_data, const void *buf, uint64_t buf_len, uint64_t *wr
 
 	if (write_len != NULL)
 		*write_len = bytes_write;
+
+	disk_offset += bytes_write;
 
 	return 0;
 }
