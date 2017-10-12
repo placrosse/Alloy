@@ -8,11 +8,8 @@ if (CMAKE_COMPILER_IS_GNUCC)
 	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fomit-frame-pointer -mno-red-zone")
 endif (CMAKE_COMPILER_IS_GNUCC)
 
-add_executable("alloy"
-	"alloy.c"
-	"libBareMetal.h"
-	"libBareMetal.c")
+add_executable("alloy" "alloy.c")
 
-target_link_libraries("alloy" "bmfs-library")
+target_link_libraries("alloy" "baremetal" "bmfs-library")
 
 set_target_properties("alloy" PROPERTIES LINK_FLAGS "-T ${CMAKE_CURRENT_SOURCE_DIR}/app.ld -static")

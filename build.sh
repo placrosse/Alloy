@@ -1,15 +1,50 @@
-#!/bin/sh
+#!/bin/bash
+
+set -e
+
+if [ "$BMFS_INCLUDE_DIR" == "" ]; then
+	echo "BMFS include directory not set."
+	exit 1
+fi
+
+if [ "$BMFS_LIBRARY" == "" ]; then
+	echo "BMFS library not set."
+	exit 1
+fi
+
+if [ "$BAREMETAL_LIBC_INCLUDE_DIR" == "" ]; then
+	echo "BareMetal libc include directory not set."
+	exit 1
+fi
+
+if [ "$BAREMETAL_LIBC_LIBRARY" == "" ]; then
+	echo "BareMetal libc library not set."
+	exit 1
+fi
+
+CC=gcc
+CFLAGS="-m64 -Wall -Wextra -Werror -Wfatal-errors"
+CFLAGS="$CFLAGS -nostdlib -nostartfiles -nodefaultlibs -nostdinc"
+CFLAGS="$CFLAGS -fomit-frame-pointer -mno-red-zone"
+CFLAGS="$CFLAGS -I$BMFS_INCLUDE_DIR -I$BAREMETAL_LIBC_INCLUDE_DIR"
+
+LD=ld
+LDFLAGS="-T app.ld -static"
 
 set -u
-set -o errexit
 
-CFLAGS="-m64 -Wall -W -pedantic -nostdlib -nostartfiles -nodefaultlibs -fomit-frame-pointer -mno-red-zone -I$topdir/include"
+function compile {
+	echo "CC $1"
+	$CC $CFLAGS -c $1 -o $2
+	objcopy --remove-section .comment $2
+	objcopy --remove-section .eh_frame $2
+}
 
-gcc $CFLAGS -std=c99 -c alloy.c -o alloy.o
-gcc $CFLAGS -std=gnu99 -c libBareMetal.c -o libBareMetal.o
+compile alloy.c alloy.o
 
-objcopy --remove-section .comment alloy.o
-objcopy --remove-section .eh_frame alloy.o
-objcopy --remove-section .comment libBareMetal.o
-objcopy --remove-section .eh_frame libBareMetal.o
-ld -T app.ld -static -o alloy.bin alloy.o libBareMetal.o "$topdir/lib/libbmfs.a"
+function link {
+	echo "LD $1"
+	$LD $LDFLAGS -o $1 ${@:2}
+}
+
+link alloy.bin alloy.o $BMFS_LIBRARY $BAREMETAL_LIBC_LIBRARY
