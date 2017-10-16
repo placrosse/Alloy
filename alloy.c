@@ -195,10 +195,6 @@ int load_app(const char app[])
 	{
 		return -ENOENT;
 	}
-	else
-	{
-		b_output("found program\n");
-	}
 
 	err = bmfs_entry_get_offset(app_entry, &app_offset);
 	if (err != 0)
