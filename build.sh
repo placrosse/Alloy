@@ -29,7 +29,7 @@ CFLAGS="$CFLAGS -fomit-frame-pointer -mno-red-zone"
 CFLAGS="$CFLAGS -I$BMFS_INCLUDE_DIR -I$BAREMETAL_LIBC_INCLUDE_DIR"
 
 LD=ld
-LDFLAGS="-T app.ld -static"
+LDFLAGS="-T alloy.ld -static"
 
 set -u
 

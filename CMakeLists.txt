@@ -12,4 +12,4 @@ add_executable("alloy" "alloy.c")
 
 target_link_libraries("alloy" "baremetal" "bmfs-library")
 
-set_target_properties("alloy" PROPERTIES LINK_FLAGS "-T ${CMAKE_CURRENT_SOURCE_DIR}/app.ld -static")
+set_target_properties("alloy" PROPERTIES LINK_FLAGS "-T ${CMAKE_CURRENT_SOURCE_DIR}/alloy.ld -static")
