@@ -149,7 +149,7 @@ void list_files()
 	disk.read = alloy_read;
 	disk.write = alloy_write;
 
-	err = bmfs_disk_read_dir(&disk, &dir);
+	err = bmfs_disk_read_root_dir(&disk, &dir);
 	if (err != 0)
 	{
 		b_output("failed to read directory");
@@ -186,7 +186,7 @@ int load_app(const char app[])
 	disk.read = alloy_read;
 	disk.write = alloy_write;
 
-	err = bmfs_disk_read_dir(&disk, &dir);
+	err = bmfs_disk_read_root_dir(&disk, &dir);
 	if (err != 0)
 		return err;
 
