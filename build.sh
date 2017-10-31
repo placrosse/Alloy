@@ -23,7 +23,7 @@ if [ "$BAREMETAL_LIBC_LIBRARY" == "" ]; then
 fi
 
 CC=gcc
-CFLAGS="-m64 -Wall -Wextra -Werror -Wfatal-errors"
+CFLAGS="-m64 -Wall -Wextra -Werror -Wfatal-errors -std=gnu99"
 CFLAGS="$CFLAGS -nostdlib -nostartfiles -nodefaultlibs -nostdinc"
 CFLAGS="$CFLAGS -fomit-frame-pointer -mno-red-zone"
 CFLAGS="$CFLAGS -I$BMFS_INCLUDE_DIR -I$BAREMETAL_LIBC_INCLUDE_DIR"
