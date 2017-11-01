@@ -213,9 +213,16 @@ int load_app(const char app[])
 
 	b_mem_allocate(&app_data, app_pages);
 
-	err = bmfs_disk_read(&disk, app_data, app_size, &app_size);
-	if (err != 0)
-		return err;
+	unsigned char *app_data8 = (unsigned char *) app_data;
+
+	uint64_t total_read_size = 0;
+	while (total_read_size < app_size) {
+		uint64_t read_size = 0;
+		err = bmfs_disk_read(&disk, &app_data8[total_read_size], app_size - total_read_size, &read_size);
+		if (err != 0)
+			return err;
+		total_read_size += read_size;
+	}
 
 	b_smp_set(app_data, NULL /* data pointer */, 1 /* cpu index */);
 
@@ -267,6 +274,8 @@ int alloy_read(void *disk_data, void *buf, uint64_t buf_len, uint64_t *read_len)
 		*read_len = bytes_read;
 
 	memcpy(buf, &disk_section[disk_offset % 4096], bytes_read);
+
+	disk_offset += bytes_read;
 
 	return 0;
 }
