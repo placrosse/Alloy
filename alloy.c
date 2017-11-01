@@ -9,7 +9,13 @@
 #include <string.h>
 
 /* Global macros */
+#ifndef BAREMETAL_PAGE_SIZE
 #define BAREMETAL_PAGE_SIZE (2 * 1024 * 1024)
+#endif
+
+#ifndef ARGC_MAX
+#define ARGC_MAX 3
+#endif
 
 /* Global typedefs */
 typedef unsigned char u8;
@@ -22,6 +28,15 @@ typedef signed int s32;
 typedef signed long long s64;
 
 /* Global variables */
+struct app_info {
+	int argc;
+	char *argv[ARGC_MAX + 1];
+	int (*main)(int argc, char **arv);
+};
+/* there's 64 bytes to mess with at
+ * this address. make sure app_info
+ * does not exceed this limit. */
+struct app_info *app_info = (struct app_info *) 0x110192;
 unsigned short running = 1;
 char input[256];
 int tokens;
@@ -38,10 +53,10 @@ char exit_string[] = "exit";
 char help_string[] = "help";
 
 /* Built-in functions*/
-int str_parse(char str[]);
+size_t str_parse(char str[]);
 void str_chomp(char str[]);
 void list_files();
-int load_app(const char app[]);
+int load_app(char app[], int tokens);
 
 /* disk functions */
 int alloy_seek(void *disk_data, int64_t offset, int whence);
@@ -62,7 +77,7 @@ int main()
 		tokens = str_parse(input);
 		if (strcmp(input, exit_string) == 0)
 			running = 0;
-		else if (load_app(input) == 0)
+		else if (load_app(input, tokens) == 0)
 			continue;
 		else if (strcmp(input, cls_string) == 0)
 		{
@@ -78,7 +93,7 @@ int main()
 		else
 		{
 			if (tokens > 0)
-				b_output("Unknown command\n");
+				puts("Unknown command\n");
 		}
 	}
 }
@@ -86,33 +101,30 @@ int main()
 /* string parse
  * Remove extra spaces and return number of words in string
  */
-int str_parse(char str[])
+size_t str_parse(char str[])
 {
-	size_t i = 0;
-	size_t x = 0;
-	int c = 0;
-
 	str_chomp(str); // remove leading and trailing spaces
 
-	for(i=x=0; str[i]; ++i)
-		if((str[i] != ' ') || (i>0 && (str[i-1] != ' ')))
-			str[x++] = str[i];
-	str[x] = '\0';
+	size_t len = strlen(str);
+	size_t x = 0;
+	int tokens = 0;
 
-	x = 0;
-	for (i=0; i<strlen(str); i++)
+	for (size_t i = 0; i < len; i++)
 	{
 		if (str[i] == ' ')
+		{
+			str[i] = 0;
 			x = 0;
+		}
 		else
 		{
 			if (x == 0)
-				c++;
+				tokens++;
 			x = 1;
 		}
 	}
 
-	return c;
+	return tokens;
 }
 
 /* string chomp
@@ -169,7 +181,12 @@ void list_files()
 	}
 }
 
-int load_app(const char app[])
+static void app_start(void)
+{
+	app_info->main(app_info->argc, app_info->argv);
+}
+
+int load_app(char app[], int tokens)
 {
 	int err;
 	uint64_t app_offset;
@@ -224,7 +241,26 @@ int load_app(const char app[])
 		total_read_size += read_size;
 	}
 
-	b_smp_set(app_data, NULL /* data pointer */, 1 /* cpu index */);
+	app_info->main = app_data;
+	app_info->argc = 0;
+	app_info->argv[0] = NULL;
+
+	for (int i = 0; i < ARGC_MAX + 1; i++)
+		app_info->argv[i] = NULL;
+
+	int j = 0;
+	for (int i = 0; (i < tokens) && (i < ARGC_MAX); i++) {
+
+		app_info->argv[i] = &app[j];
+		app_info->argc++;
+
+		while (app[j] != 0)
+			j++;
+
+		j++;
+	}
+
+	b_smp_set(app_start, NULL /* data pointer */, 1 /* cpu index */);
 
 	/* TODO : b_smp_wait(...); b_mem_release(app_data, app_pages); */
 
