@@ -260,9 +260,7 @@ int load_app(char app[], int tokens)
 		j++;
 	}
 
-	b_smp_set(app_start, NULL /* data pointer */, 1 /* cpu index */);
-
-	/* TODO : b_smp_wait(...); b_mem_release(app_data, app_pages); */
+	app_start();
 
 	return 0;
 }
