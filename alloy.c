@@ -2,7 +2,7 @@
 /* Copyright 2017 Return Infinity, Inc */
 
 /* Global includes */
-#include <baremetal/baremetal.h>
+#include <baremetal/syscalls.h>
 #include <bmfs/bmfs.h>
 #include <errno.h>
 #include <stdio.h>
