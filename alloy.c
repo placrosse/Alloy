@@ -57,6 +57,7 @@ size_t str_parse(char str[]);
 void str_chomp(char str[]);
 void list_files();
 int load_app(char app[], int tokens);
+void printf_d(int val);
 
 /* disk functions */
 int alloy_seek(void *disk_data, int64_t offset, int whence);
@@ -177,7 +178,9 @@ void list_files()
 			continue;
 
 		b_output(entry->FileName);
-		b_output("\n");
+		b_output("\t");
+		printf_d(entry->FileSize);
+		b_output(" bytes\n");
 	}
 }
 
@@ -340,3 +343,25 @@ int alloy_write(void *disk_data, const void *buf, uint64_t buf_len, uint64_t *wr
 	return 0;
 }
 
+void printf_d(int val)
+{
+	int f = 1, d;
+	char digit[2];
+	if (val < 0 && val != 0)
+	{
+		b_output("-");
+		val = -val;
+	}
+	while((val/f) >= 10)
+		f *= 10;
+	while (f>0)
+	{
+		d = val/f;
+		digit[0] = '0';
+		digit[0] += d;
+		digit[1] = '\0';
+		b_output(digit);
+		val = val-d*f;
+		f = f/10;
+	}
+}
