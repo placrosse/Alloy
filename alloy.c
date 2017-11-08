@@ -346,7 +346,7 @@ int alloy_write(void *disk_data, const void *buf, uint64_t buf_len, uint64_t *wr
 void printf_d(int val)
 {
 	int f = 1, d;
-	char digit[2];
+	char digit;
 	if (val < 0 && val != 0)
 	{
 		b_output("-");
@@ -357,10 +357,8 @@ void printf_d(int val)
 	while (f>0)
 	{
 		d = val/f;
-		digit[0] = '0';
-		digit[0] += d;
-		digit[1] = '\0';
-		b_output(digit);
+		digit = '0' + d;
+		b_output_chars(&digit, 1);
 		val = val-d*f;
 		f = f/10;
 	}
