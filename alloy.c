@@ -216,9 +216,9 @@ int load_app(char app[], int tokens)
 
 	app_entry = bmfs_dir_find(&dir, (const char *)(app));
 	if (app_entry == NULL)
-	{
 		return -ENOENT;
-	}
+	else if (bmfs_entry_is_directory(app_entry))
+		return -EISDIR;
 
 	err = bmfs_entry_get_offset(app_entry, &app_offset);
 	if (err != 0)
