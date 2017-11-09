@@ -23,28 +23,20 @@ if [ "$BAREMETAL_LIBC_LIBRARY" == "" ]; then
 fi
 
 CC=gcc
-CFLAGS="-m64 -Wall -Wextra -Werror -Wfatal-errors -std=gnu99"
+CFLAGS="-m64 -Wall -Wextra -Werror -Wfatal-errors -g -std=gnu99"
 CFLAGS="$CFLAGS -nostdlib -nostartfiles -nodefaultlibs -nostdinc"
 CFLAGS="$CFLAGS -fomit-frame-pointer -mno-red-zone"
 CFLAGS="$CFLAGS -I$BMFS_INCLUDE_DIR -I$BAREMETAL_LIBC_INCLUDE_DIR"
 
 LD=ld
-LDFLAGS="-T alloy.ld -static"
+LDFLAGS="-T alloy.ld -static -L ../../output/lib"
+
+OBJCOPY=objcopy
 
 set -u
 
-function compile {
-	echo "CC $1"
-	$CC $CFLAGS -c $1 -o $2
-	objcopy --remove-section .comment $2
-	objcopy --remove-section .eh_frame $2
-}
-
-compile alloy.c alloy.o
-
-function link {
-	echo "LD $1"
-	$LD $LDFLAGS -o $1 ${@:2}
-}
-
-link alloy.bin alloy.o $BMFS_LIBRARY $BAREMETAL_LIBC_LIBRARY
+$CC $CFLAGS -c alloy.c -o alloy.o
+$OBJCOPY --remove-section .comment alloy.o
+$OBJCOPY --remove-section .eh_frame alloy.o
+$LD $LDFLAGS alloy.o -o alloy.elf -lbmfs -lc
+$OBJCOPY -O binary alloy.elf alloy.bin
