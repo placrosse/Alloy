@@ -176,6 +176,10 @@ void list_files()
 			continue;
 		else if (bmfs_entry_is_terminator(entry))
 			continue;
+		else if (bmfs_entry_is_directory(entry))
+			b_output("directory : ");
+		else
+			b_output("file      : ");
 
 		b_output(entry->FileName);
 		b_output("\t");
