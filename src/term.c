@@ -16,6 +16,14 @@ void alloy_term_done(struct AlloyTerm *term)
 		term->done(term->data);
 }
 
+int alloy_term_clear(struct AlloyTerm *term)
+{
+	if (term->clear == NULL)
+		return -EFAULT;
+
+	return term->clear(term->data);
+}
+
 int alloy_term_write(struct AlloyTerm *term,
                      const char *str,
                      unsigned int str_len)
