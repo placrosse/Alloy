@@ -32,8 +32,33 @@ static int vesaterm_write_char(struct AlloyVesaTerm *term, char c)
 		/* TODO : better error code ? */
 		return -EINVAL;
 
+	/* color in the background */
+
+	for (unsigned int y = 0; y < alloy_font.line_height; y++)
+	{
+		unsigned int background_width = glyph->advance;
+		for (unsigned int x = 0; x < background_width; x++)
+		{
+			unsigned buffer_offset = 0;
+			buffer_offset += (y + term->y_pos) * term->x_res;
+			buffer_offset += x + term->x_pos;
+			buffer_offset *= term->depth / 8;
+
+			unsigned long int red   = (term->background & 0xff0000) >> 0x10;
+			unsigned long int green = (term->background & 0x00ff00) >> 0x08;
+			unsigned long int blue  = (term->background & 0x0000ff) >> 0x00;
+
+			term->frame_buffer[buffer_offset + 0] = red;
+			term->frame_buffer[buffer_offset + 1] = green;
+			term->frame_buffer[buffer_offset + 2] = blue;
+		}
+	}
+
+	/* color in the foreground */
+
 	for (unsigned int y = 0; y < glyph->height; y++)
 	{
+
 		for (unsigned int x = 0; x < glyph->width; x++)
 		{
 			unsigned int glyph_offset = 0;
@@ -47,15 +72,38 @@ static int vesaterm_write_char(struct AlloyVesaTerm *term, char c)
 			buffer_offset += x + term->x_pos + glyph->left;
 			buffer_offset *= term->depth / 8;
 
-			term->frame_buffer[buffer_offset + 0] = (intensity * ((term->foreground & 0xff0000) >> 0x10)) / 0xff;
-			term->frame_buffer[buffer_offset + 1] = (intensity * ((term->foreground & 0x00ff00) >> 0x08)) / 0xff;
-			term->frame_buffer[buffer_offset + 2] = (intensity * ((term->foreground & 0x0000ff) >> 0x00)) / 0xff;
+			unsigned long int red = 0;
+			red += intensity * ((term->foreground & 0xff0000) >> 0x10);
+			red += (255 - intensity) * ((term->background & 0xff0000) >> 0x10);
+			red /= 0x100;
+
+			unsigned long int green = 0;
+			green += intensity * ((term->foreground & 0xff00) >> 0x08);
+			green += (255 - intensity) * ((term->background & 0xff00) >> 0x08);
+			green /= 0x100;
+
+			unsigned long int blue = 0;
+			blue += intensity * (term->foreground & 0xff);
+			blue += (255 - intensity) * (term->background & 0xff);
+			blue /= 0x100;
+
+			term->frame_buffer[buffer_offset + 0] = red;
+			term->frame_buffer[buffer_offset + 1] = green;
+			term->frame_buffer[buffer_offset + 2] = blue;
 		}
 	}
 
 	term->x_pos += glyph->advance;
 	term->column++;
 
+	return 0;
+}
+
+static int vesaterm_set_background(void *term_ptr,
+                                   unsigned long int color)
+{
+	struct AlloyVesaTerm *term = (struct AlloyVesaTerm *) term_ptr;
+	term->background = color;
 	return 0;
 }
 
@@ -130,13 +178,14 @@ void alloy_vesaterm_init(struct AlloyVesaTerm *term)
 	term->base.data = term;
 	term->base.done = vesaterm_done;
 	term->base.clear = vesaterm_clear;
+	term->base.set_background = vesaterm_set_background;
 	term->base.set_foreground = vesaterm_set_foreground;
 	term->base.write = vesaterm_write;
 	term->tab_width = 8;
 	term->line = 1;
 	term->column = 1;
-	/* initialize foreground to green */
-	term->foreground = 0x00ff00;
+	/* initialize foreground to white */
+	term->foreground = 0xffffff;
 	/* initialize background to black */
 	term->background = 0x000000;
 	term->x_pos = 0;
