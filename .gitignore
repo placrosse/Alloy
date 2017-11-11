@@ -37,7 +37,7 @@
 *.hex
 *.bin
 /alloy
-/alloy-font-generator
+/utils/alloy-font-generator
 
 # Debug files
 *.dSYM/
