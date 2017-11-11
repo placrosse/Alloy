@@ -6,6 +6,38 @@
 #define NULL ((void *) 0x00)
 #endif
 
+static int calculate_x_bias(struct AlloyInput *input)
+{
+	unsigned int i = input->buf_pos;
+
+	/* rewind to the beginning of the line */
+
+	while (i > 0)
+	{
+		if (input->buf[i - 1] == '\n')
+			break;
+		i--;
+	}
+
+	/* iterate back to the buffer position,
+	 * calculating the x bias */
+
+	unsigned int x_bias = 0;
+
+	while (i < input->buf_pos)
+	{
+		if (input->buf[i] == '\t')
+			x_bias += input->tab_width - (x_bias % input->tab_width);
+		else
+			x_bias++;
+		i++;
+	}
+
+	input->x_bias = x_bias;
+
+	return 0;
+}
+
 void alloy_input_init(struct AlloyInput *input)
 {
 	input->buf = NULL;
@@ -52,39 +84,29 @@ int alloy_input_insert(struct AlloyInput *input, char c)
 int alloy_input_left(struct AlloyInput *input)
 {
 	if (input->buf_pos <= 0)
-		/* TODO : should this error ? */
+		/* TODO : Should this error? */
 		return 0;
 
 	input->buf_pos--;
 
+	return calculate_x_bias(input);
+}
+
+int alloy_input_right(struct AlloyInput *input)
+{
+	if (input->buf_pos >= input->buf_len)
+		/* TODO : Should this error? */
+		return 0;
+
+	input->buf_pos++;
+
 	/* determine the new x bias */
 
-	unsigned int i = input->buf_pos;
+	return calculate_x_bias(input);
+}
 
-	/* rewind to the beginning of the line */
-
-	while (i > 0)
-	{
-		if (input->buf[i - 1] == '\n')
-			break;
-		i--;
-	}
-
-	/* iterate back to the buffer position,
-	 * calculating the x bias */
-
-	unsigned int x_bias = 0;
-
-	while (i < input->buf_pos)
-	{
-		if (input->buf[i] == '\t')
-			x_bias += input->tab_width - (x_bias % input->tab_width);
-		else
-			x_bias++;
-		i++;
-	}
-
-	input->x_bias = x_bias;
-
+int alloy_input_home(struct AlloyInput *input)
+{
+	(void) input;
 	return 0;
 }

@@ -116,6 +116,11 @@ static void test_movement(void)
 	assert(err == 0);
 	assert(alloy_input.buf_pos == 1);
 	assert(alloy_input.x_bias == 1);
+
+	err = alloy_input_right(&alloy_input);
+	assert(err == 0);
+	assert(alloy_input.buf_pos == 2);
+	assert(alloy_input.x_bias == 0);
 }
 
 static void test_backspace(void)
