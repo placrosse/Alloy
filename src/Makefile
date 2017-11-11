@@ -29,9 +29,10 @@ targets += liballoy.a
 targets += $(tests)
 
 libfiles += font.o
+libfiles += input.o
+libfiles += shell.o
 libfiles += term.o
 libfiles += vesaterm.o
-libfiles += input.o
 
 .PHONY: all
 all: $(targets)
@@ -55,6 +56,8 @@ input.o: input.c input.h
 input-test.o: input-test.c input.h
 
 input-test: input-test.o liballoy.a
+
+shell.o: shell.c shell.h term.h input.h
 
 term.o: term.c term.h
 
