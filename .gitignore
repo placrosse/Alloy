@@ -38,6 +38,7 @@
 *.bin
 /alloy
 /utils/alloy-font-generator
+/src/vesaterm-test
 
 # Debug files
 *.dSYM/
