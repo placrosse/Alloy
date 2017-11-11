@@ -83,8 +83,56 @@ static void test_insert(void)
 	assert(alloy_input.x_bias == 4);
 }
 
+static void test_movement(void)
+{
+	struct AlloyInput alloy_input;
+
+	alloy_input_init(&alloy_input);
+
+	/* check for left movement */
+
+	alloy_input.buf = tmp_buffer;
+	alloy_input.buf[0] = 'a';
+	alloy_input.buf[1] = '\n';
+	alloy_input.buf[2] = 'b';
+	alloy_input.buf[3] = 'c';
+	alloy_input.buf[4] = 'd';
+	alloy_input.buf_len = 5;
+	alloy_input.buf_pos = 5;
+	alloy_input.buf_res = sizeof(tmp_buffer);
+	/* x bias could be anything at this point.
+	 * it should be adjusting to the current
+	 * line on left and right arrows */
+	alloy_input.x_bias = 55;
+
+	int err = alloy_input_left(&alloy_input);
+	assert(err == 0);
+	assert(alloy_input.buf_pos == 4);
+	assert(alloy_input.x_bias == 2);
+
+	err |= alloy_input_left(&alloy_input);
+	err |= alloy_input_left(&alloy_input);
+	err |= alloy_input_left(&alloy_input);
+	assert(err == 0);
+	assert(alloy_input.buf_pos == 1);
+	assert(alloy_input.x_bias == 1);
+}
+
+static void test_backspace(void)
+{
+
+}
+
+static void test_delete(void)
+{
+
+}
+
 int main(void)
 {
 	test_insert();
+	test_movement();
+	test_backspace();
+	test_delete();
 	return EXIT_SUCCESS;
 }
