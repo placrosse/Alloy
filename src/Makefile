@@ -33,5 +33,6 @@ vesaterm.o: vesaterm.c vesaterm.h term.h
 
 .PHONY: clean
 clean:
+	$(RM) font.c
 	$(RM) $(libfiles)
 	$(RM) liballoy.a
