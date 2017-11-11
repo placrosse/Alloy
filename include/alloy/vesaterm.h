@@ -21,6 +21,10 @@ struct AlloyVesaTerm
 	unsigned long int foreground;
 	/** Background color, in xxRRGGBB pixel format */
 	unsigned long int background;
+	/** The horizontal position of the 'pen', in pixels. */
+	unsigned int x_pos;
+	/** The vertical position of the 'pen', in pixels. */
+	unsigned int y_pos;
 	/** The number of pixels per line. */
 	unsigned int x_res;
 	/** The number of lines in a frame. */
