@@ -78,5 +78,7 @@ int main(void)
 	/* done */
 	fclose(bitmap);
 
+	alloy_term_done(term);
+
 	return EXIT_SUCCESS;
 }
