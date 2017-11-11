@@ -39,7 +39,7 @@
 *.x86_64
 *.hex
 *.bin
-/alloy
+/src/alloy
 /utils/alloy-font-generator
 /src/vesaterm-test
 
