@@ -10,7 +10,9 @@ AR ?= $(CROSS_COMPILE)ar
 ARFLAGS = rcs
 
 VPATH += ../include/alloy
+VPATH += ../utils
 
+libfiles += font.o
 libfiles += term.o
 libfiles += vesaterm.o
 
@@ -19,6 +21,11 @@ all: liballoy.a
 
 liballoy.a: $(libfiles)
 	$(AR) $(ARFLAGS) $@ $(libfiles)
+
+font.o: font.c font.h
+
+font.c: alloy-font-generator
+	./$<
 
 term.o: term.c term.h
 
