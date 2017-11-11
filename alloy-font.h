@@ -11,6 +11,8 @@ struct alloy_glyph
 	unsigned int ascii_value;
 	unsigned int width;
 	unsigned int height;
+	unsigned int left;
+	unsigned int top;
 	const unsigned char *buf;
 };
 
@@ -20,7 +22,7 @@ struct alloy_font
 	unsigned char glyph_count;
 };
 
-const struct alloy_font alloy_font;
+extern const struct alloy_font alloy_font;
 
 const struct alloy_glyph *alloy_font_get_glyph(const struct alloy_font *font, unsigned int c);
 
