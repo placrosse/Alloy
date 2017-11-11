@@ -16,25 +16,25 @@ typedef signed int s32;
 typedef signed long long s64;
 
 /* Global defines*/
-struct BMFS_Dir
+struct BMFSEntry
 {
 	char FileName[32];
 	u64 StartingBlock;
 	u64 ReservedBlocks;
 	u64 FileSize;
 	u64 Unused;
-}
+};
 
 /* Global variables */
 unsigned long AlloyStartBlock;
 unsigned long AlloyLength;
-unsigned long MemoryAddress;
+struct BMFSEntry *BMFS_Dir;
 
 int main()
 {
-	MemoryAddress = (void*)0x100000;
+	BMFS_Dir = (void*)0x100000;
 	// Load the BMFS directory into memory
-	b_disk_read(MemoryAddress, 1, 1, 0); // Copy second 4K sector to memory
+	b_disk_read(BMFS_Dir, 1, 1, 0); // Copy second 4K sector to memory
 	
 	// Does alloy.bin exist?
 	
@@ -42,6 +42,8 @@ int main()
 	// If so, load it to 0x200000 and jump to it
 	
 	// If not write an error to standard output
+
+	return 0;
 }
 
 unsigned long b_disk_read(void *mem, unsigned long start, unsigned long num, unsigned long disknum) {
@@ -52,8 +54,8 @@ unsigned long b_disk_read(void *mem, unsigned long start, unsigned long num, uns
 
 int int_strncmp(const char *str1, const char *str2, unsigned int num)
 {
-	while(n--)
+	while(num--)
 		if(*str1++ != *str2++)
-			return *(unsigned char*)(str1-1) - *(unsigned char*)(str2-1)
+			return *(unsigned char*)(str1-1) - *(unsigned char*)(str2-1);
 	return 0;
 }
