@@ -14,6 +14,9 @@ struct AlloyTerm
 	/** Called when the term is no longer
 	 * going to be used by the caller. */
 	void (*done)(void *data);
+	/** Called to clear the screen and
+	 * reset the cursor position. */
+	int (*clear)(void *data);
 	/** Writes text to the screen. */
 	int (*write)(void *data, const char *str, unsigned int str_len);
 	/** Sets the background color. */
