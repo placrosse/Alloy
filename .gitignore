@@ -4,6 +4,9 @@
 *.obj
 *.elf
 
+# Generated bitmap images
+/src/vesaterm-test.bmp
+
 # Font downloads
 /fonts/source-code-pro/*
 !/fonts/source-code-pro/build.sh

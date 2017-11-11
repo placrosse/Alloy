@@ -1,6 +1,9 @@
 CC ?= $(CROSS_COMPILE)gcc
 CFLAGS := $(CFLAGS) -Wall -Wextra -Werror -Wfatal-errors -std=gnu99
 CFLAGS := $(CFLAGS) -I ../include
+ifdef ALLOY_WITH_BAREMETAL
+CFLAGS := $(CFLAGS) -DALLOY_WITH_BAREMETAL=1
+endif
 
 LD ?= $(CROSS_COMPILE)ld
 LDFLAGS ?=
@@ -16,8 +19,10 @@ libfiles += font.o
 libfiles += term.o
 libfiles += vesaterm.o
 
+tests += vesaterm-test
+
 .PHONY: all
-all: liballoy.a
+all: liballoy.a $(tests)
 
 liballoy.a: $(libfiles)
 	$(AR) $(ARFLAGS) $@ $(libfiles)
@@ -31,8 +36,16 @@ term.o: term.c term.h
 
 vesaterm.o: vesaterm.c vesaterm.h term.h
 
+vesaterm-test.o: vesaterm-test.c vesaterm.h term.h
+
+vesaterm-test: vesaterm-test.o liballoy.a
+
 .PHONY: clean
 clean:
 	$(RM) font.c
 	$(RM) $(libfiles)
 	$(RM) liballoy.a
+
+.PHONY: test
+test: $(tests)
+	./vesaterm-test
