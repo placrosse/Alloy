@@ -10,7 +10,7 @@
 !/fonts/source-code-pro/clean.sh
 
 # Generated source code
-/alloy-font.c
+/src/font.c
 
 # Precompiled Headers
 *.gch
