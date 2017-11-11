@@ -9,9 +9,9 @@ extern "C"
 struct AlloyTerm
 {
 	/** Used for passing data to the
-	 * terminal implementation. */
+	 * term implementation. */
 	void *data;
-	/** Called when the terminal is no longer
+	/** Called when the term is no longer
 	 * going to be used by the caller. */
 	void (*done)(void *data);
 	/** Writes text to the screen. */
@@ -22,11 +22,11 @@ struct AlloyTerm
 	int (*set_foreground)(void *data, unsigned long int color);
 };
 
-void alloy_term_init(struct alloy_terminal *terminal);
+void alloy_term_init(struct AlloyTerm *term);
 
-void alloy_term_done(struct alloy_terminal *terminal);
+void alloy_term_done(struct AlloyTerm *term);
 
-int alloy_term_write(struct alloy_term *term,
+int alloy_term_write(struct AlloyTerm *term,
                      const char *str,
                      unsigned int str_len);
 
