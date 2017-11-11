@@ -7,6 +7,8 @@ void alloy_term_init(struct AlloyTerm *term)
 {
 	term->data = NULL;
 	term->done = NULL;
+	term->clear = NULL;
+	term->toggle_cursor = NULL;
 	term->set_foreground = NULL;
 	term->set_background = NULL;
 	term->write = NULL;
@@ -24,6 +26,14 @@ int alloy_term_clear(struct AlloyTerm *term)
 		return -EFAULT;
 
 	return term->clear(term->data);
+}
+
+int alloy_term_toggle_cursor(struct AlloyTerm *term)
+{
+	if (term->toggle_cursor == NULL)
+		return -EFAULT;
+
+	return term->toggle_cursor(term->data);
 }
 
 int alloy_term_set_background(struct AlloyTerm *term,
