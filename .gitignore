@@ -4,6 +4,14 @@
 *.obj
 *.elf
 
+# Font downloads
+/fonts/source-code-pro/*
+!/fonts/source-code-pro/build.sh
+!/fonts/source-code-pro/clean.sh
+
+# Generated source code
+/alloy-font.c
+
 # Precompiled Headers
 *.gch
 *.pch
@@ -28,6 +36,8 @@
 *.x86_64
 *.hex
 *.bin
+/alloy
+/alloy-font-generator
 
 # Debug files
 *.dSYM/
