@@ -15,6 +15,10 @@ const char test_message_4[] = "A line with teal text.\n";
 
 const char test_message_5[] = "A line with a grey background.\n";
 
+const char test_message_6[] = "This line will overflow horizontally. "
+                              "This line will overflow horizontally. "
+                              "This line will overflow horizontally.\n";
+
 int main(void)
 {
 	struct AlloyVesaTerm vesaterm;
@@ -50,6 +54,13 @@ int main(void)
 	assert(err == 0);
 	/* write message */
 	err = alloy_term_write(term, test_message_5, sizeof(test_message_5) - 1);
+	assert(err == 0);
+
+	/* set background back to black */
+	err = alloy_term_set_background(term, 0x000000);
+	assert(err == 0);
+	/* write message */
+	err = alloy_term_write(term, test_message_6, sizeof(test_message_6) - 1);
 	assert(err == 0);
 
 	/* dump memory into a bitmap file,
