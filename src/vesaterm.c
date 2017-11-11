@@ -1,7 +1,59 @@
 #include <alloy/vesaterm.h>
 
+#include <alloy/font.h>
+
+#include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
+
+static int vesaterm_write_char(struct AlloyVesaTerm *term, char c)
+{
+	if (c == '\n')
+	{
+		/* TODO */
+		return -1;
+	}
+	else if (c == ' ')
+	{
+		/* TODO */
+		return -1;
+	}
+	else if (c == '\t')
+	{
+		/* TODO */
+		return -1;
+	}
+
+	const struct AlloyGlyph *glyph = alloy_font_get_glyph(&alloy_font, c);
+	if (glyph == NULL)
+		/* TODO : better error code ? */
+		return -EINVAL;
+
+	for (unsigned int y = 0; y < glyph->height; y++)
+	{
+		for (unsigned int x = 0; x < glyph->width; x++)
+		{
+			unsigned int glyph_offset = 0;
+			glyph_offset += y * glyph->width;
+			glyph_offset += x;
+
+			unsigned char intensity = glyph->buf[glyph_offset];
+
+			unsigned buffer_offset = 0;
+			buffer_offset += (y + term->y_pos + alloy_font.line_height - glyph->top) * term->x_res;
+			buffer_offset += x + term->x_pos + glyph->left;
+			buffer_offset *= term->depth / 8;
+
+			term->frame_buffer[buffer_offset + 0] = intensity;
+			term->frame_buffer[buffer_offset + 1] = intensity;
+			term->frame_buffer[buffer_offset + 2] = intensity;
+		}
+	}
+
+	term->x_pos += glyph->advance;
+
+	return 0;
+}
 
 static void vesaterm_done(void *term_ptr)
 {
@@ -49,9 +101,14 @@ static int vesaterm_write(void *term_ptr,
                           const char *str,
                           unsigned int str_len)
 {
-	(void) term_ptr;
-	(void) str;
-	(void) str_len;
+	struct AlloyVesaTerm *term = (struct AlloyVesaTerm *) term_ptr;
+
+	for (unsigned int i = 0; i < str_len; i++)
+	{
+		int err = vesaterm_write_char(term, str[i]);
+		if (err != 0)
+			return err;
+	}
 	return 0;
 }
 
@@ -66,6 +123,8 @@ void alloy_vesaterm_init(struct AlloyVesaTerm *term)
 	term->foreground = 0x00ff00;
 	/* initialize background to black */
 	term->background = 0x000000;
+	term->x_pos = 0;
+	term->y_pos = 0;
 #ifdef ALLOY_WITH_BAREMETAL
 	term->x_res = *(uint16_t *)(0x5084);
 	term->y_res = *(uint16_t *)(0x5086);
