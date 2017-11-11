@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -29,13 +30,14 @@ static void export_glyph(FILE *outfile, char ascii_value, FT_GlyphSlotRec *glyph
 		fprintf(outfile, "\t\t'%c',\n", ascii_value);
 	fprintf(outfile, "\t\t%u,\n", glyph_slot->bitmap.width);
 	fprintf(outfile, "\t\t%u,\n", glyph_slot->bitmap.rows);
-
+	fprintf(outfile, "\t\t%u,\n", glyph_slot->bitmap_left);
+	fprintf(outfile, "\t\t%u,\n", glyph_slot->bitmap_top);
 	/* export bitmap data */
 	unsigned int width = glyph_slot->bitmap.width;
 	unsigned int height = glyph_slot->bitmap.rows;
 	unsigned int pitch = glyph_slot->bitmap.pitch;
 	unsigned char *buffer = glyph_slot->bitmap.buffer;
-	fprintf(outfile, "\t\t\"");
+	fprintf(outfile, "\t\t(const unsigned char *) \"");
 	for (unsigned int y = 0; y < height; y++)
 	{
 		for (unsigned int x = 0; x < width; x++)
@@ -46,7 +48,7 @@ static void export_glyph(FILE *outfile, char ascii_value, FT_GlyphSlotRec *glyph
 		fprintf(outfile, "\"\n");
 
 		if ((y + 1) < height)
-			fprintf(outfile, "\t\t\"");
+			fprintf(outfile, "\t\t                        \"");
 	}
 
 	fprintf(outfile, "\t},\n");
@@ -177,11 +179,38 @@ static int alloy_font_plan_execute(struct alloy_font_plan *font_plan)
 	return EXIT_SUCCESS;
 }
 
+static void print_usage(const char *argv0)
+{
+	printf("Usage: %s [options]\n", argv0);
+	printf("\n");
+	printf("Options:\n");
+	printf("\t--help      : Print this help message and exit.\n");
+	printf("\t--font FILE : Chose a font for Alloy.\n");
+}
+
 int main(int argc, const char **argv)
 {
 	struct alloy_font_plan font_plan;
 
 	alloy_font_plan_init(&font_plan);
+
+	for (int i = 1; i < argc; i++)
+	{
+		if (strcmp(argv[i], "--font") == 0)
+		{
+			font_plan.fontfile = argv[i++];
+		}
+		else if (strcmp(argv[i], "--help") == 0)
+		{
+			print_usage(argv[0]);
+			return EXIT_FAILURE;
+		}
+		else
+		{
+			fprintf(stderr, "Unknown option '%s'.\n", argv[i]);
+			return EXIT_FAILURE;
+		}
+	}
 
 	return alloy_font_plan_execute(&font_plan);
 }
