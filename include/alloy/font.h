@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-struct alloy_glyph
+struct AlloyGlyph
 {
 	unsigned int ascii_value;
 	unsigned int width;
@@ -16,15 +16,15 @@ struct alloy_glyph
 	const unsigned char *buf;
 };
 
-struct alloy_font
+struct AlloyFont
 {
-	const struct alloy_glyph *glyph_array;
+	const struct AlloyGlyph *glyph_array;
 	unsigned char glyph_count;
 };
 
-extern const struct alloy_font alloy_font;
+extern const struct AlloyFont alloy_font;
 
-const struct alloy_glyph *alloy_font_get_glyph(const struct alloy_font *font, unsigned int c);
+const struct AlloyGlyph *alloy_font_get_glyph(const struct AlloyFont *font, unsigned int c);
 
 #ifdef __cplusplus
 } /* extern "C" */
