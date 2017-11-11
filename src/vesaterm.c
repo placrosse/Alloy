@@ -10,13 +10,21 @@ static int vesaterm_write_char(struct AlloyVesaTerm *term, char c)
 {
 	if (c == '\n')
 	{
-		/* TODO */
-		return -1;
+		term->y_pos += alloy_font.line_height;
+		term->x_pos = 0;
+		term->line++;
+		term->column = 1;
+		return 0;
 	}
 	else if (c == '\t')
 	{
-		/* TODO */
-		return -1;
+		while (term->column % term->tab_width)
+		{
+			int err = vesaterm_write_char(term, ' ');
+			if (err != 0)
+				return err;
+		}
+		return 0;
 	}
 
 	const struct AlloyGlyph *glyph = alloy_font_get_glyph(&alloy_font, c);
@@ -46,6 +54,7 @@ static int vesaterm_write_char(struct AlloyVesaTerm *term, char c)
 	}
 
 	term->x_pos += glyph->advance;
+	term->column++;
 
 	return 0;
 }
@@ -114,6 +123,9 @@ void alloy_vesaterm_init(struct AlloyVesaTerm *term)
 	term->base.done = vesaterm_done;
 	term->base.clear = vesaterm_clear;
 	term->base.write = vesaterm_write;
+	term->tab_width = 8;
+	term->line = 1;
+	term->column = 1;
 	/* initialize foreground to green */
 	term->foreground = 0x00ff00;
 	/* initialize background to black */

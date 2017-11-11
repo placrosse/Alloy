@@ -21,6 +21,17 @@ struct AlloyVesaTerm
 	unsigned long int foreground;
 	/** Background color, in xxRRGGBB pixel format */
 	unsigned long int background;
+	/** The number of spaces that a tab should
+	 * occupy. */
+	unsigned int tab_width;
+	/** The current line that the cursor is on.
+	 * The first line of the terminal is equal to
+	 * one. */
+	unsigned int line;
+	/** The current column that the cursor is on.
+	 * The first column of the terminal is equal
+	 * to one. */
+	unsigned int column;
 	/** The horizontal position of the 'pen', in pixels. */
 	unsigned int x_pos;
 	/** The vertical position of the 'pen', in pixels. */
