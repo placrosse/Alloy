@@ -83,7 +83,7 @@ int main(void)
 		while (x < vesaterm.x_res)
 		{
 			unsigned int byte_offset = 0;
-			byte_offset += y * vesaterm.x_res;
+			byte_offset += (vesaterm.y_res - y) * vesaterm.x_res;
 			byte_offset += x;
 			byte_offset *= vesaterm.depth / 8;
 			fwrite(&vesaterm.frame_buffer[byte_offset + 2], 1, 1, bitmap);
