@@ -5,7 +5,11 @@
 
 #include <alloy/vesaterm.h>
 
-const char test_message[] = "Hello, world!";
+const char test_message[] = "Hello, world!\n";
+
+const char test_message_2[] = "Line 2\n";
+
+const char test_message_3[] = "With\ttab.\n";
 
 int main(void)
 {
@@ -19,6 +23,12 @@ int main(void)
 	assert(err == 0);
 
 	err = alloy_term_write(term, test_message, sizeof(test_message) - 1);
+	assert(err == 0);
+
+	err = alloy_term_write(term, test_message_2, sizeof(test_message_2) - 1);
+	assert(err == 0);
+
+	err = alloy_term_write(term, test_message_3, sizeof(test_message_3) - 1);
 	assert(err == 0);
 
 	/* dump memory into a bitmap file,
