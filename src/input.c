@@ -48,3 +48,43 @@ int alloy_input_insert(struct AlloyInput *input, char c)
 	
 	return 0;
 }
+
+int alloy_input_left(struct AlloyInput *input)
+{
+	if (input->buf_pos <= 0)
+		/* TODO : should this error ? */
+		return 0;
+
+	input->buf_pos--;
+
+	/* determine the new x bias */
+
+	unsigned int i = input->buf_pos;
+
+	/* rewind to the beginning of the line */
+
+	while (i > 0)
+	{
+		if (input->buf[i - 1] == '\n')
+			break;
+		i--;
+	}
+
+	/* iterate back to the buffer position,
+	 * calculating the x bias */
+
+	unsigned int x_bias = 0;
+
+	while (i < input->buf_pos)
+	{
+		if (input->buf[i] == '\t')
+			x_bias += input->tab_width - (x_bias % input->tab_width);
+		else
+			x_bias++;
+		i++;
+	}
+
+	input->x_bias = x_bias;
+
+	return 0;
+}
