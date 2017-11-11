@@ -13,11 +13,6 @@ static int vesaterm_write_char(struct AlloyVesaTerm *term, char c)
 		/* TODO */
 		return -1;
 	}
-	else if (c == ' ')
-	{
-		/* TODO */
-		return -1;
-	}
 	else if (c == '\t')
 	{
 		/* TODO */
