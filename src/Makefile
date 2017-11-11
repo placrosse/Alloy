@@ -12,6 +12,7 @@ LDLIBS := $(LDLIBS) -lbmfs -lc
 targets += alloy.bin
 else
 tests += vesaterm-test
+tests += input-test
 endif
 
 LD ?= $(CROSS_COMPILE)ld
@@ -30,6 +31,7 @@ targets += $(tests)
 libfiles += font.o
 libfiles += term.o
 libfiles += vesaterm.o
+libfiles += input.o
 
 .PHONY: all
 all: $(targets)
@@ -48,6 +50,12 @@ font.o: font.c font.h
 font.c: alloy-font-generator
 	./$<
 
+input.o: input.c input.h
+
+input-test.o: input-test.c input.h
+
+input-test: input-test.o liballoy.a
+
 term.o: term.c term.h
 
 vesaterm.o: vesaterm.c vesaterm.h term.h
@@ -65,3 +73,4 @@ clean:
 .PHONY: test
 test: $(tests)
 	./vesaterm-test
+	./input-test

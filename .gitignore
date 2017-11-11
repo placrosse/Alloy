@@ -42,6 +42,7 @@
 /src/alloy
 /utils/alloy-font-generator
 /src/vesaterm-test
+/src/input-test
 
 # Debug files
 *.dSYM/
