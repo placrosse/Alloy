@@ -1,5 +1,5 @@
 CC ?= $(CROSS_COMPILE)gcc
-CFLAGS := $(CFLAGS) -Wall -Wextra -Werror -Wfatal-errors -std=gnu99
+CFLAGS := $(CFLAGS) -Wall -Wextra -Werror -Wfatal-errors -std=gnu99 -g
 CFLAGS := $(CFLAGS) -I ../include
 ifdef ALLOY_WITH_BAREMETAL
 CFLAGS := $(CFLAGS) -DALLOY_WITH_BAREMETAL=1
