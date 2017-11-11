@@ -15,7 +15,10 @@ int main(void)
 
 	struct AlloyTerm *term = &vesaterm.base;
 
-	int err = alloy_term_write(term, test_message, sizeof(test_message) - 1);
+	int err = alloy_term_clear(term);
+	assert(err == 0);
+
+	err = alloy_term_write(term, test_message, sizeof(test_message) - 1);
 	assert(err == 0);
 
 	/* dump memory into a bitmap file,
@@ -36,9 +39,9 @@ int main(void)
 	/* file size, in bytes */
 	unsigned int file_size = 0;
 	/* frame buffer size */
-	file_size += vesaterm.x_res * vesaterm.y_res;
+	file_size += vesaterm.x_res * vesaterm.y_res * vesaterm.depth / 8;
 	/* file header and image header sizes */
-	file_size += 12 + 40;
+	file_size += 14 + 40;
 	/* write the file size (TODO : should this be little or big endian?) */
 	fwrite(&file_size, 4, 1, bitmap);
 	/* reserved bytes */
@@ -46,7 +49,7 @@ int main(void)
 	/* pixel data offset, in bytes */
 	unsigned int pixels_offset = 0;
 	/* file header and image header sizes. */
-	pixels_offset += 12 + 40;
+	pixels_offset += 14 + 40;
 	/* write pixel data offset */
 	fwrite(&pixels_offset, 4, 1, bitmap);
 	/* image header size, in bytes (always 40) */
@@ -60,7 +63,7 @@ int main(void)
 	/* image planes (always 1) */
 	fwrite("\x01\x00", 2, 1, bitmap);
 	/* color depth, in bits (always 24) */
-	fwrite("\x10\x00", 2, 1, bitmap);
+	fwrite("\x18\x00", 2, 1, bitmap);
 	/* compression (always none) */
 	fwrite("\x00\x00\x00\x00", 4, 1, bitmap);
 	/* image size (zero for uncompressed images) */
@@ -74,7 +77,24 @@ int main(void)
 	/* number of significant colors (zero means all of them) */
 	fwrite("\x00\x00\x00\x00", 4, 1, bitmap);
 	/* pixel data */
-	fwrite(vesaterm.frame_buffer, 1, vesaterm.x_res * vesaterm.y_res, bitmap);
+	for (unsigned int y = 0; y < vesaterm.y_res; y++)
+	{
+		unsigned int x = 0;
+		while (x < vesaterm.x_res)
+		{
+			unsigned int byte_offset = 0;
+			byte_offset += y * vesaterm.x_res;
+			byte_offset += x;
+			byte_offset *= vesaterm.depth / 8;
+			fwrite(&vesaterm.frame_buffer[byte_offset + 2], 1, 1, bitmap);
+			fwrite(&vesaterm.frame_buffer[byte_offset + 1], 1, 1, bitmap);
+			fwrite(&vesaterm.frame_buffer[byte_offset + 0], 1, 1, bitmap);
+			x++;
+		}
+		/* pad to a multiple of 4 bytes */
+		while ((x % 4) != 0)
+			fwrite("\x00", 1, 1, bitmap);
+	}
 	/* done */
 	fclose(bitmap);
 
