@@ -31,6 +31,12 @@ void alloy_term_done(struct AlloyTerm *term);
 
 int alloy_term_clear(struct AlloyTerm *term);
 
+int alloy_term_set_background(struct AlloyTerm *term,
+                              unsigned long int color);
+
+int alloy_term_set_foreground(struct AlloyTerm *term,
+                              unsigned long int color);
+
 int alloy_term_write(struct AlloyTerm *term,
                      const char *str,
                      unsigned int str_len);
