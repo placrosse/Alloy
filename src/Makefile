@@ -1,8 +1,17 @@
 CC ?= $(CROSS_COMPILE)gcc
 CFLAGS := $(CFLAGS) -Wall -Wextra -Werror -Wfatal-errors -std=gnu99 -g
 CFLAGS := $(CFLAGS) -I ../include
+
 ifdef ALLOY_WITH_BAREMETAL
+TOP ?= ../../..
+CFLAGS := $(CFLAGS) -fno-stack-protector -fomit-frame-pointer -mno-red-zone
 CFLAGS := $(CFLAGS) -DALLOY_WITH_BAREMETAL=1
+CFLAGS := $(CFLAGS) -I $(TOP)/output/include
+LDFLAGS := $(LDFLAGS) -static -L $(TOP)/output/lib
+LDLIBS := $(LDLIBS) -lbmfs -lc
+targets += alloy.bin
+else
+tests += vesaterm-test
 endif
 
 LD ?= $(CROSS_COMPILE)ld
@@ -15,14 +24,21 @@ ARFLAGS = rcs
 VPATH += ../include/alloy
 VPATH += ../utils
 
+targets += liballoy.a
+targets += $(tests)
+
 libfiles += font.o
 libfiles += term.o
 libfiles += vesaterm.o
 
-tests += vesaterm-test
-
 .PHONY: all
-all: liballoy.a $(tests)
+all: $(targets)
+
+alloy.bin: alloy
+
+alloy: alloy.o liballoy.a
+
+alloy.o: alloy.c vesaterm.h term.h
 
 liballoy.a: $(libfiles)
 	$(AR) $(ARFLAGS) $@ $(libfiles)
