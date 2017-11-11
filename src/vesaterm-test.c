@@ -13,6 +13,8 @@ const char test_message_3[] = "With\ttab.\n";
 
 const char test_message_4[] = "A line with teal text.\n";
 
+const char test_message_5[] = "A line with a grey background.\n";
+
 int main(void)
 {
 	struct AlloyVesaTerm vesaterm;
@@ -36,7 +38,18 @@ int main(void)
 	/* set foreground to teal */
 	err = alloy_term_set_foreground(term, 0x008080);
 	assert(err == 0);
+	/* write message */
 	err = alloy_term_write(term, test_message_4, sizeof(test_message_4) - 1);
+	assert(err == 0);
+
+	/* set foreground to white */
+	err = alloy_term_set_foreground(term, 0xffffff);
+	assert(err == 0);
+	/* set background to grey */
+	err = alloy_term_set_background(term, 0x333333);
+	assert(err == 0);
+	/* write message */
+	err = alloy_term_write(term, test_message_5, sizeof(test_message_5) - 1);
 	assert(err == 0);
 
 	/* dump memory into a bitmap file,
