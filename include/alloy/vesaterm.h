@@ -17,6 +17,10 @@ struct AlloyVesaTerm
 	/** The base structure of the terminal
 	 * implementation.*/
 	struct AlloyTerm base;
+	/** Foreground color, in xxRRGGBB pixel format */
+	unsigned long int foreground;
+	/** Background color, in xxRRGGBB pixel format */
+	unsigned long int background;
 	/** The number of pixels per line. */
 	unsigned int x_res;
 	/** The number of lines in a frame. */
