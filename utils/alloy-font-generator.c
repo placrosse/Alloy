@@ -38,20 +38,24 @@ static void export_glyph(FILE *outfile, char ascii_value, FT_GlyphSlotRec *glyph
 	unsigned int height = glyph_slot->bitmap.rows;
 	unsigned int pitch = glyph_slot->bitmap.pitch;
 	unsigned char *buffer = glyph_slot->bitmap.buffer;
-	fprintf(outfile, "\t\t(const unsigned char *) \"");
-	for (unsigned int y = 0; y < height; y++)
+	if ((height == 0) || (width == 0))
 	{
-		for (unsigned int x = 0; x < width; x++)
-		{
-			fprintf(outfile, "\\x%02x", buffer[(y * pitch) + x]);
-		}
-
-		fprintf(outfile, "\"\n");
-
-		if ((y + 1) < height)
-			fprintf(outfile, "\t\t                        \"");
+		fprintf(outfile, "\t\t(const unsigned char *) 0x00,\n");
 	}
+	else
+	{
+		fprintf(outfile, "\t\t(const unsigned char *) \"");
+		for (unsigned int y = 0; y < height; y++)
+		{
+			for (unsigned int x = 0; x < width; x++)
+				fprintf(outfile, "\\x%02x", buffer[(y * pitch) + x]);
 
+			fprintf(outfile, "\"\n");
+
+			if ((y + 1) < height)
+				fprintf(outfile, "\t\t                        \"");
+		}
+	}
 	fprintf(outfile, "\t},\n");
 }
 
@@ -96,7 +100,7 @@ static void alloy_font_plan_init(struct alloy_font_plan *font_plan)
 	font_plan->font_size = 16;
 	font_plan->dpi_x = 72;
 	font_plan->dpi_y = 72;
-	font_plan->glyph_array = "!\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+	font_plan->glyph_array = " !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 	font_plan->glyph_count = strlen(font_plan->glyph_array);
 }
 
