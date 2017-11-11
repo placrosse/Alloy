@@ -14,9 +14,9 @@ static void export_header(FILE *outfile, unsigned int glyph_count)
 	fprintf(outfile, " *          Any changes to this file may be overwritten.\n");
 	fprintf(outfile, " */\n");
 	fprintf(outfile, "\n");
-	fprintf(outfile, "#include \"alloy-font.h\"\n");
+	fprintf(outfile, "#include <alloy/font.h>\n");
 	fprintf(outfile, "\n");
-	fprintf(outfile, "struct alloy_glyph alloy_glyphs[%u] = {\n", glyph_count);
+	fprintf(outfile, "struct AlloyGlyph alloy_glyphs[%u] = {\n", glyph_count);
 }
 
 static void export_glyph(FILE *outfile, char ascii_value, FT_GlyphSlotRec *glyph_slot)
@@ -58,12 +58,12 @@ static void export_footer(FILE *outfile)
 {
 	fprintf(outfile, "};\n");
 	fprintf(outfile, "\n");
-	fprintf(outfile, "const struct alloy_font alloy_font = {\n");
+	fprintf(outfile, "const struct AlloyFont alloy_font = {\n");
 	fprintf(outfile, "\talloy_glyphs,\n");
 	fprintf(outfile, "\tsizeof(alloy_glyphs) / sizeof(alloy_glyphs[0])\n");
 	fprintf(outfile, "};\n");
 	fprintf(outfile, "\n");
-	fprintf(outfile, "const struct alloy_glyph *alloy_font_get_glyph(const struct alloy_font *font, unsigned int c)\n");
+	fprintf(outfile, "const struct AlloyGlyph *alloy_font_get_glyph(const struct AlloyFont *font, unsigned int c)\n");
 	fprintf(outfile, "{\n");
 	fprintf(outfile, "\tfor (unsigned int i = 0; i < font->glyph_count; i++)\n");
 	fprintf(outfile, "\t{\n");
@@ -87,8 +87,8 @@ struct alloy_font_plan
 
 static void alloy_font_plan_init(struct alloy_font_plan *font_plan)
 {
-	font_plan->fontfile = "fonts/source-code-pro/source-code-pro-2.030R-ro-1.050R-it/TTF/SourceCodePro-Regular.ttf";
-	font_plan->outfile = "alloy-font.c";
+	font_plan->fontfile = "../fonts/source-code-pro/source-code-pro-2.030R-ro-1.050R-it/TTF/SourceCodePro-Regular.ttf";
+	font_plan->outfile = "font.c";
 	font_plan->font_size = 16;
 	font_plan->dpi_x = 72;
 	font_plan->dpi_y = 72;
