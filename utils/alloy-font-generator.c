@@ -32,6 +32,7 @@ static void export_glyph(FILE *outfile, char ascii_value, FT_GlyphSlotRec *glyph
 	fprintf(outfile, "\t\t%u,\n", glyph_slot->bitmap.rows);
 	fprintf(outfile, "\t\t%u,\n", glyph_slot->bitmap_left);
 	fprintf(outfile, "\t\t%u,\n", glyph_slot->bitmap_top);
+	fprintf(outfile, "\t\t%lu,\n", glyph_slot->advance.x >> 6);
 	/* export bitmap data */
 	unsigned int width = glyph_slot->bitmap.width;
 	unsigned int height = glyph_slot->bitmap.rows;
@@ -54,11 +55,14 @@ static void export_glyph(FILE *outfile, char ascii_value, FT_GlyphSlotRec *glyph
 	fprintf(outfile, "\t},\n");
 }
 
-static void export_footer(FILE *outfile)
+static void export_footer(FILE *outfile, FT_Face face)
 {
 	fprintf(outfile, "};\n");
 	fprintf(outfile, "\n");
 	fprintf(outfile, "const struct AlloyFont alloy_font = {\n");
+	fprintf(outfile, "\t\"%s\",\n", face->family_name);
+	fprintf(outfile, "\t\"%s\",\n", face->style_name);
+	fprintf(outfile, "\t%u,\n", face->height >> 6);
 	fprintf(outfile, "\talloy_glyphs,\n");
 	fprintf(outfile, "\tsizeof(alloy_glyphs) / sizeof(alloy_glyphs[0])\n");
 	fprintf(outfile, "};\n");
@@ -170,7 +174,7 @@ static int alloy_font_plan_execute(struct alloy_font_plan *font_plan)
 		export_glyph(outfile, c, face->glyph);
 	}
 
-	export_footer(outfile);
+	export_footer(outfile, face);
 
 	FT_Done_FreeType(library);
 
