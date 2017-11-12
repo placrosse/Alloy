@@ -35,6 +35,10 @@ OBJCOPY=objcopy
 
 set -u
 
+$CC $CFLAGS -c loader.c -o loader.o
+$LD -T loader.ld loader.o -o loader.elf
+$OBJCOPY -O binary loader.elf loader.bin
+
 $CC $CFLAGS -c alloy.c -o alloy.o
 $OBJCOPY --remove-section .comment alloy.o
 $OBJCOPY --remove-section .eh_frame alloy.o
