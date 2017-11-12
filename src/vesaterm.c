@@ -99,11 +99,63 @@ static int vesaterm_write_char(struct AlloyVesaTerm *term, char c)
 	return 0;
 }
 
+static int vesaterm_get_size(void *term_ptr,
+                             unsigned int *width,
+                             unsigned int *height)
+{
+	struct AlloyVesaTerm *term = (struct AlloyVesaTerm *) term_ptr;
+
+	/* Calculate the width and space of the
+	 * terminal by dividing the x and y resolutions
+	 * by the space character width and line
+	 * height (respectively).
+	 * */
+
+	const struct AlloyGlyph *space_glyph = alloy_font_get_glyph(&alloy_font, ' ');
+	if (space_glyph == NULL)
+		return -1;
+
+	*width = term->x_res / space_glyph->advance;
+
+	*height = term->y_res / alloy_font.line_height;
+
+	return 0;
+}
+
 static int vesaterm_set_background(void *term_ptr,
                                    unsigned long int color)
 {
 	struct AlloyVesaTerm *term = (struct AlloyVesaTerm *) term_ptr;
 	term->background = color;
+	return 0;
+}
+
+static int vesaterm_set_cursor(void *term_ptr,
+                               unsigned int line,
+                               unsigned int column)
+{
+	/* column and lien must be greater than zero */
+
+	if ((line <= 0) || (column <= 0))
+		return -1;
+
+	struct AlloyVesaTerm *term = (struct AlloyVesaTerm *) term_ptr;
+	term->line = line;
+	term->column = column;
+
+	/* determine the new x and y positions by
+	 * using the width of a space character and
+	 * the line height.
+	 */
+
+	const struct AlloyGlyph *space_glyph = alloy_font_get_glyph(&alloy_font, ' ');
+	if (space_glyph == NULL)
+		return -1;
+
+	term->x_pos = column * space_glyph->advance;
+
+	term->y_pos = line * alloy_font.line_height;
+
 	return 0;
 }
 
@@ -178,7 +230,9 @@ void alloy_vesaterm_init(struct AlloyVesaTerm *term)
 	term->base.data = term;
 	term->base.done = vesaterm_done;
 	term->base.clear = vesaterm_clear;
+	term->base.get_size = vesaterm_get_size;
 	term->base.set_background = vesaterm_set_background;
+	term->base.set_cursor = vesaterm_set_cursor;
 	term->base.set_foreground = vesaterm_set_foreground;
 	term->base.write = vesaterm_write;
 	term->tab_width = 8;
