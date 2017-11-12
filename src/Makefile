@@ -1,3 +1,5 @@
+include ../make/patterns.mk
+
 CC ?= $(CROSS_COMPILE)gcc
 CFLAGS := $(CFLAGS) -Wall -Wextra -Werror -Wfatal-errors -std=gnu99 -g
 CFLAGS := $(CFLAGS) -I ../include
@@ -7,10 +9,12 @@ TOP ?= ../../..
 CFLAGS := $(CFLAGS) -fno-stack-protector -fomit-frame-pointer -mno-red-zone
 CFLAGS := $(CFLAGS) -DALLOY_WITH_BAREMETAL=1
 CFLAGS := $(CFLAGS) -I $(TOP)/output/include
+LD = $(CROSS_COMPILE)ld
 LDFLAGS := $(LDFLAGS) -static -L $(TOP)/output/lib
 LDLIBS := $(LDLIBS) -lbmfs -lc
 targets += alloy.bin
 else
+LD = $(CROSS_COMPILE)gcc
 tests += vesaterm-test
 tests += input-test
 endif
@@ -44,7 +48,6 @@ alloy: alloy.o liballoy.a
 alloy.o: alloy.c vesaterm.h term.h
 
 liballoy.a: $(libfiles)
-	$(AR) $(ARFLAGS) $@ $(libfiles)
 
 font.o: font.c font.h
 
@@ -71,9 +74,12 @@ vesaterm-test: vesaterm-test.o liballoy.a
 clean:
 	$(RM) font.c
 	$(RM) $(libfiles)
+	$(RM) $(tests) $(tests:=.o)
 	$(RM) liballoy.a
 
 .PHONY: test
 test: $(tests)
 	./vesaterm-test
 	./input-test
+
+$(V).SILENT:
