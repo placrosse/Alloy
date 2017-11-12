@@ -21,6 +21,10 @@ const char test_message_6[] = "This line will overflow horizontally. "
 
 const char test_message_7[] = "Middle";
 
+const char test_message_8[] = "This line will overflow vertically.\n"
+                              "This line will overflow vertically.\n"
+                              "This line will overflow vertically.\n";
+
 int main(void)
 {
 	struct AlloyVesaTerm vesaterm;
@@ -74,6 +78,11 @@ int main(void)
 	err = alloy_term_set_cursor(term, line, column);
 	assert(err == 0);
 	err = alloy_term_write(term, test_message_7, sizeof(test_message_7) - 1);
+	assert(err == 0);
+
+	err = alloy_term_set_cursor(term, height - 1, 1);
+	assert(err == 0);
+	err = alloy_term_write(term, test_message_8, sizeof(test_message_8) - 1);
 	assert(err == 0);
 
 	/* dump memory into a bitmap file,

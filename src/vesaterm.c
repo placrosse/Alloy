@@ -34,7 +34,7 @@ static int vesaterm_write_char(struct AlloyVesaTerm *term, char c)
 
 	/* color in the background */
 
-	for (unsigned int y = 0; y < alloy_font.line_height; y++)
+	for (unsigned int y = 0; (y < alloy_font.line_height) && ((y + term->y_pos) < term->y_res); y++)
 	{
 		unsigned int background_width = glyph->advance;
 		for (unsigned int x = 0; (x < background_width) && ((x + term->x_pos) < term->x_res); x++)
@@ -56,7 +56,7 @@ static int vesaterm_write_char(struct AlloyVesaTerm *term, char c)
 
 	/* color in the foreground */
 
-	for (unsigned int y = 0; y < glyph->height; y++)
+	for (unsigned int y = 0; (y < glyph->height) && ((y + term->y_pos + alloy_font.line_height - glyph->top) < term->y_res); y++)
 	{
 
 		for (unsigned int x = 0; (x < glyph->width) && ((x + term->x_pos + glyph->left) < term->x_res); x++)
