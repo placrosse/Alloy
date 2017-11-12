@@ -17,9 +17,14 @@ start:					; Start of program label
 	call [b_disk_read]
 
 	; Check directory for "alloy.bin"
-;	lea rsi, [rel foundit]		; Load RSI with memory address of string
-;	call [b_output]			; Print the string that RSI points to
 
+	jmp loadfile
+
+	lea rsi, [rel notfound]		; Load error message
+	call [b_output]			; Output the error
+	jmp $				; Halt
+
+loadfile:
 	; Load Alloy to memory
 	mov rax, 512			; Start at 2MiB
 	mov rcx, 512			; Load 2MiB
@@ -32,5 +37,5 @@ start:					; Start of program label
 
 ret					; Return to OS
 
-foundit: db 'Found it', 13, 0
+notfound: db 'Binary not found. System halted.', 13, 0
 dir:
