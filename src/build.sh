@@ -13,6 +13,10 @@ CFLAGS="$CFLAGS -nostdlib -nostartfiles -nodefaultlibs -nostdinc"
 CFLAGS="$CFLAGS -fomit-frame-pointer -fno-stack-protector -mno-red-zone"
 CFLAGS="$CFLAGS -I $TOP/output/include -I ../include"
 
+if test -z "$ALLOY_WITH_BAREMETAL"; then
+	CFLAGS="$CFLAGS -DALLOY_WITH_BAREMETAL=1"
+fi
+
 LD=ld
 LDLIBS="-lc -lbmfs"
 LDFLAGS="-static -L $TOP/output/lib -T alloy.ld"
