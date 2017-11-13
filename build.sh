@@ -6,6 +6,8 @@ cd fonts/source-code-pro
 ./build.sh
 cd ../..
 
+NASM=nasm
+
 CC=gcc
 CFLAGS="-m64 -Wall -Wextra -Werror -Wfatal-errors -g -std=gnu99"
 
@@ -23,6 +25,8 @@ LDFLAGS="-T alloy.ld -static -L ../../output/lib"
 OBJCOPY=objcopy
 
 set -u
+
+$NASM loader.asm -o loader.bin
 
 $CC $CFLAGS -c alloy.c -o alloy.o
 $OBJCOPY --remove-section .comment alloy.o
