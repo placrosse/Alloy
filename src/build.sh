@@ -36,4 +36,4 @@ $CC $CFLAGS -c vesaterm.c -o vesaterm.o
 
 $LD $LDFLAGS alloy.o font.o term.o vesaterm.o -o alloy.elf $LDLIBS
 
-$OBJCOPY -O binary alloy alloy.bin
+$OBJCOPY -O binary alloy.elf alloy.bin
