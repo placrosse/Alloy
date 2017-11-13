@@ -14,9 +14,9 @@ static void export_header(FILE *outfile, unsigned int glyph_count)
 	fprintf(outfile, " *          Any changes to this file may be overwritten.\n");
 	fprintf(outfile, " */\n");
 	fprintf(outfile, "\n");
-	fprintf(outfile, "#include \"alloy-font.h\"\n");
+	fprintf(outfile, "#include <alloy/font.h>\n");
 	fprintf(outfile, "\n");
-	fprintf(outfile, "struct alloy_glyph alloy_glyphs[%u] = {\n", glyph_count);
+	fprintf(outfile, "struct AlloyGlyph alloy_glyphs[%u] = {\n", glyph_count);
 }
 
 static void export_glyph(FILE *outfile, char ascii_value, FT_GlyphSlotRec *glyph_slot)
@@ -32,38 +32,46 @@ static void export_glyph(FILE *outfile, char ascii_value, FT_GlyphSlotRec *glyph
 	fprintf(outfile, "\t\t%u,\n", glyph_slot->bitmap.rows);
 	fprintf(outfile, "\t\t%u,\n", glyph_slot->bitmap_left);
 	fprintf(outfile, "\t\t%u,\n", glyph_slot->bitmap_top);
+	fprintf(outfile, "\t\t%lu,\n", glyph_slot->advance.x >> 6);
 	/* export bitmap data */
 	unsigned int width = glyph_slot->bitmap.width;
 	unsigned int height = glyph_slot->bitmap.rows;
 	unsigned int pitch = glyph_slot->bitmap.pitch;
 	unsigned char *buffer = glyph_slot->bitmap.buffer;
-	fprintf(outfile, "\t\t(const unsigned char *) \"");
-	for (unsigned int y = 0; y < height; y++)
+	if ((height == 0) || (width == 0))
 	{
-		for (unsigned int x = 0; x < width; x++)
-		{
-			fprintf(outfile, "\\x%02x", buffer[(y * pitch) + x]);
-		}
-
-		fprintf(outfile, "\"\n");
-
-		if ((y + 1) < height)
-			fprintf(outfile, "\t\t                        \"");
+		fprintf(outfile, "\t\t(const unsigned char *) 0x00,\n");
 	}
+	else
+	{
+		fprintf(outfile, "\t\t(const unsigned char *) \"");
+		for (unsigned int y = 0; y < height; y++)
+		{
+			for (unsigned int x = 0; x < width; x++)
+				fprintf(outfile, "\\x%02x", buffer[(y * pitch) + x]);
 
+			fprintf(outfile, "\"\n");
+
+			if ((y + 1) < height)
+				fprintf(outfile, "\t\t                        \"");
+		}
+	}
 	fprintf(outfile, "\t},\n");
 }
 
-static void export_footer(FILE *outfile)
+static void export_footer(FILE *outfile, FT_Face face)
 {
 	fprintf(outfile, "};\n");
 	fprintf(outfile, "\n");
-	fprintf(outfile, "const struct alloy_font alloy_font = {\n");
+	fprintf(outfile, "const struct AlloyFont alloy_font = {\n");
+	fprintf(outfile, "\t\"%s\",\n", face->family_name);
+	fprintf(outfile, "\t\"%s\",\n", face->style_name);
+	fprintf(outfile, "\t%u,\n", face->height >> 6);
 	fprintf(outfile, "\talloy_glyphs,\n");
 	fprintf(outfile, "\tsizeof(alloy_glyphs) / sizeof(alloy_glyphs[0])\n");
 	fprintf(outfile, "};\n");
 	fprintf(outfile, "\n");
-	fprintf(outfile, "const struct alloy_glyph *alloy_font_get_glyph(const struct alloy_font *font, unsigned int c)\n");
+	fprintf(outfile, "const struct AlloyGlyph *alloy_font_get_glyph(const struct AlloyFont *font, unsigned int c)\n");
 	fprintf(outfile, "{\n");
 	fprintf(outfile, "\tfor (unsigned int i = 0; i < font->glyph_count; i++)\n");
 	fprintf(outfile, "\t{\n");
@@ -87,12 +95,12 @@ struct alloy_font_plan
 
 static void alloy_font_plan_init(struct alloy_font_plan *font_plan)
 {
-	font_plan->fontfile = "fonts/source-code-pro/source-code-pro-2.030R-ro-1.050R-it/TTF/SourceCodePro-Regular.ttf";
-	font_plan->outfile = "alloy-font.c";
+	font_plan->fontfile = "../fonts/source-code-pro/source-code-pro-2.030R-ro-1.050R-it/TTF/SourceCodePro-Regular.ttf";
+	font_plan->outfile = "font.c";
 	font_plan->font_size = 16;
 	font_plan->dpi_x = 72;
 	font_plan->dpi_y = 72;
-	font_plan->glyph_array = "!\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+	font_plan->glyph_array = " !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 	font_plan->glyph_count = strlen(font_plan->glyph_array);
 }
 
@@ -170,7 +178,7 @@ static int alloy_font_plan_execute(struct alloy_font_plan *font_plan)
 		export_glyph(outfile, c, face->glyph);
 	}
 
-	export_footer(outfile);
+	export_footer(outfile, face);
 
 	FT_Done_FreeType(library);
 

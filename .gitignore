@@ -4,13 +4,17 @@
 *.obj
 *.elf
 
+# Generated bitmap images
+/src/vesaterm-test.bmp
+
 # Font downloads
 /fonts/source-code-pro/*
 !/fonts/source-code-pro/build.sh
 !/fonts/source-code-pro/clean.sh
+!/fonts/source-code-pro/Makefile
 
 # Generated source code
-/alloy-font.c
+/src/font.c
 
 # Precompiled Headers
 *.gch
@@ -36,8 +40,10 @@
 *.x86_64
 *.hex
 *.bin
-/alloy
-/alloy-font-generator
+/src/alloy
+/utils/alloy-font-generator
+/src/vesaterm-test
+/src/input-test
 
 # Debug files
 *.dSYM/
