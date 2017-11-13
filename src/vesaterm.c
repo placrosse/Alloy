@@ -206,6 +206,13 @@ static int vesaterm_clear(void *term_ptr)
 		}
 	}
 
+	/* restore cursor position */
+
+	term->x_pos = 0;
+	term->y_pos = 0;
+	term->line = 1;
+	term->column = 1;
+
 	return 0;
 }
 

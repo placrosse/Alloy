@@ -8,6 +8,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <alloy/shell.h>
+#include <alloy/input.h>
+#include <alloy/vesaterm.h>
+
 /* Global macros */
 #ifndef BAREMETAL_PAGE_SIZE
 #define BAREMETAL_PAGE_SIZE (2 * 1024 * 1024)
@@ -38,14 +42,13 @@ struct app_info {
  * does not exceed this limit. */
 struct app_info *app_info = (struct app_info *) 0x110192;
 unsigned short running = 1;
-char input[256];
 int tokens;
 uint64_t disk_offset = 0;
 uint64_t disk_length = 1024 * 1024 * 6;
 unsigned char disk_section[4096];
 
 /* Strings */
-const char alloy_version[] = "Alloy v0.0.1\n";
+const char alloy_version[] = "Alloy v0.0.2\n";
 char cls_string[] = "cls";
 char dir_string[] = "dir";
 char ver_string[] = "ver";
@@ -55,9 +58,9 @@ char help_string[] = "help";
 /* Built-in functions*/
 size_t str_parse(char str[]);
 void str_chomp(char str[]);
-void list_files();
+void list_files(struct AlloyShell *shell);
 int load_app(char app[], int tokens);
-void printf_d(int val);
+void printf_d(struct AlloyShell *shell, int val);
 
 /* disk functions */
 int alloy_seek(void *disk_data, int64_t offset, int whence);
@@ -65,38 +68,109 @@ int alloy_tell(void *disk_data, int64_t *offset);
 int alloy_read(void *disk_data, void *buf, uint64_t buf_len, uint64_t *read_len);
 int alloy_write(void *disk_data, const void *buf, uint64_t buf_len, uint64_t *write_len);
 
+char input_buf[512];
+
+static int get_input(struct AlloyShell *shell);
+
 /* Program code */
 int main()
 {
-	for (int i=0; i<25; i++)
-		b_output("\n");
-	b_output(alloy_version);
+	/* setup the terminal */
+
+	struct AlloyVesaTerm vesaterm;
+
+	alloy_vesaterm_init(&vesaterm);
+
+	struct AlloyTerm *term = &vesaterm.base;
+
+	alloy_term_set_background(term, 0x000000);
+
+	alloy_term_clear(term);
+
+	alloy_term_write_asciiz(term, alloy_version);
+
+	/* setup the input structure */
+
+	struct AlloyInput input;
+
+	alloy_input_init(&input);
+
+	input.buf = input_buf;
+	input.buf_res = sizeof(input_buf);
+
+	/* setup the shell */
+
+	struct AlloyShell shell;
+
+	alloy_shell_init(&shell);
+
+	shell.input = input;
+	shell.term = *term;
+
 	while (running == 1)
 	{
-		b_output("> ");
-		b_input(input, 255);
-		tokens = str_parse(input);
-		if (strcmp(input, exit_string) == 0)
+		alloy_input_clear(&shell.input);
+
+		alloy_term_write(&shell.term, "> ", 2);
+
+		get_input(&shell);
+
+		alloy_term_write_asciiz(&shell.term, "\n");
+
+		tokens = str_parse(input_buf);
+
+		if (strcmp(input_buf, exit_string) == 0)
 			running = 0;
-		else if (load_app(input, tokens) == 0)
+		else if (load_app(input_buf, tokens) == 0)
 			continue;
-		else if (strcmp(input, cls_string) == 0)
+		else if (strcmp(input_buf, cls_string) == 0)
+			alloy_term_clear(&shell.term);
+		else if (strcmp(input_buf, ver_string) == 0)
+			alloy_term_write_asciiz(&shell.term, alloy_version);
+		else if (strcmp(input_buf, dir_string) == 0)
+			list_files(&shell);
+		else if (strcmp(input_buf, help_string) == 0)
 		{
-			for (int i=0; i<25; i++)
-				b_output("\n");
+			alloy_term_write_asciiz(&shell.term, "Available commands:\n");
+			alloy_term_write_asciiz(&shell.term, "\tcls  : Clear the screen.\n");
+			alloy_term_write_asciiz(&shell.term, "\tdir  : List the directory entries.\n");
+			alloy_term_write_asciiz(&shell.term, "\texit : Exit the shell.\n");
+			alloy_term_write_asciiz(&shell.term, "\thelp : Print this help message.\n");
+			alloy_term_write_asciiz(&shell.term, "\tver  : Print the current version of Alloy.\n");
 		}
-		else if (strcmp(input, ver_string) == 0)
-			b_output(alloy_version);
-		else if (strcmp(input, dir_string) == 0)
-			list_files();
-		else if (strcmp(input, help_string) == 0)
-			b_output("Available commands: ver, cls, help, exit\n");
 		else
 		{
 			if (tokens > 0)
-				puts("Unknown command\n");
+			{
+				alloy_term_set_foreground(&shell.term, 0x1111ff);
+				alloy_term_write_asciiz(&shell.term, "Unknown command: ");
+				alloy_term_set_foreground(&shell.term, 0xffffff);
+				alloy_term_write_asciiz(&shell.term, shell.input.buf);
+				alloy_term_write_asciiz(&shell.term, "\n");
+			}
 		}
 	}
+}
+
+static int get_input(struct AlloyShell *shell)
+{
+	for (;;)
+	{
+		char c = 0;
+		/* poll until a character has
+		 * been entered */
+		while (c == 0)
+			c = b_input_key();
+
+		if (c == 0x1c)
+			break;
+
+		alloy_term_write(&shell->term, &c, 1);
+
+		alloy_input_insert(&shell->input, c);
+	}
+
+	return 0;
 }
 
 /* string parse
@@ -148,7 +222,7 @@ void str_chomp(char str[])
 	str[i - begin] = '\0';
 }
 
-void list_files()
+void list_files(struct AlloyShell *shell)
 {
 	int err;
 	uint64_t i;
@@ -165,7 +239,9 @@ void list_files()
 	err = bmfs_disk_read_root_dir(&disk, &dir);
 	if (err != 0)
 	{
-		b_output("failed to read directory");
+		alloy_term_set_foreground(&shell->term, 0x0000ff);
+		alloy_term_write_asciiz(&shell->term, "Failed to read directory.\n");
+		alloy_term_set_foreground(&shell->term, 0xffffff);
 		return;
 	}
 
@@ -177,14 +253,20 @@ void list_files()
 		else if (bmfs_entry_is_terminator(entry))
 			continue;
 		else if (bmfs_entry_is_directory(entry))
-			b_output("directory : ");
+		{
+			alloy_term_write_asciiz(&shell->term, "Directory : ");
+			alloy_term_set_foreground(&shell->term, 0xff0000);
+			alloy_term_write_asciiz(&shell->term, entry->FileName);
+			alloy_term_set_foreground(&shell->term, 0xffffff);
+		}
 		else
-			b_output("file      : ");
-
-		b_output(entry->FileName);
-		b_output("\t");
-		printf_d(entry->FileSize);
-		b_output(" bytes\n");
+		{
+			alloy_term_write_asciiz(&shell->term, "File      : ");
+			alloy_term_write_asciiz(&shell->term, entry->FileName);
+		}
+		alloy_term_write_asciiz(&shell->term, "\t");
+		printf_d(shell, entry->FileSize);
+		alloy_term_write_asciiz(&shell->term, " bytes\n");
 	}
 }
 
@@ -347,13 +429,13 @@ int alloy_write(void *disk_data, const void *buf, uint64_t buf_len, uint64_t *wr
 	return 0;
 }
 
-void printf_d(int val)
+void printf_d(struct AlloyShell *shell, int val)
 {
 	int f = 1, d;
 	char digit;
 	if (val < 0 && val != 0)
 	{
-		b_output("-");
+		alloy_term_write(&shell->term, "-", 1);
 		val = -val;
 	}
 	while((val/f) >= 10)
@@ -362,7 +444,7 @@ void printf_d(int val)
 	{
 		d = val/f;
 		digit = '0' + d;
-		b_output_chars(&digit, 1);
+		alloy_term_write(&shell->term, &digit, 1);
 		val = val-d*f;
 		f = f/10;
 	}

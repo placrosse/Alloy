@@ -43,6 +43,17 @@ void alloy_input_init(struct AlloyInput *input)
 	input->buf = NULL;
 	input->buf_len = 0;
 	input->buf_pos = 0;
+	input->buf_res = 0;
+	input->x_bias = 0;
+}
+
+void alloy_input_clear(struct AlloyInput *input)
+{
+	for (unsigned int i = 0; i < input->buf_res; i++)
+		input->buf[i] = 0;
+
+	input->buf_pos = 0;
+
 	input->x_bias = 0;
 }
 

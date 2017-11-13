@@ -2,6 +2,7 @@
 
 #include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 
 void alloy_term_init(struct AlloyTerm *term)
 {
@@ -84,4 +85,12 @@ int alloy_term_write(struct AlloyTerm *term,
 		term->write(term->data, str, str_len);
 
 	return 0;
+}
+
+int alloy_term_write_asciiz(struct AlloyTerm *term,
+                            const char *str)
+{
+	unsigned int str_len = strlen(str);
+
+	return alloy_term_write(term, str, str_len);
 }

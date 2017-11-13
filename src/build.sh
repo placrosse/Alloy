@@ -13,7 +13,7 @@ CFLAGS="$CFLAGS -nostdlib -nostartfiles -nodefaultlibs -nostdinc"
 CFLAGS="$CFLAGS -fomit-frame-pointer -fno-stack-protector -mno-red-zone"
 CFLAGS="$CFLAGS -I $TOP/output/include -I ../include"
 
-if test -z "$ALLOY_WITH_BAREMETAL"; then
+if ! test -z "$ALLOY_WITH_BAREMETAL"; then
 	CFLAGS="$CFLAGS -DALLOY_WITH_BAREMETAL=1"
 fi
 
@@ -28,16 +28,12 @@ NASM=nasm
 $NASM loader.asm -o loader.bin
 
 $CC $CFLAGS -c alloy.c -o alloy.o
-$OBJCOPY --remove-section .comment alloy.o
-$OBJCOPY --remove-section .eh_frame alloy.o
-
 $CC $CFLAGS -c font.c -o font.o
-$OBJCOPY --remove-section .comment font.o
-$OBJCOPY --remove-section .eh_frame font.o
-
+$CC $CFLAGS -c input.c -o input.o
+$CC $CFLAGS -c shell.c -o shell.o
 $CC $CFLAGS -c term.c -o term.o
 $CC $CFLAGS -c vesaterm.c -o vesaterm.o
 
-$LD $LDFLAGS alloy.o font.o term.o vesaterm.o -o alloy.elf $LDLIBS
+$LD $LDFLAGS alloy.o font.o input.o shell.o term.o vesaterm.o -o alloy.elf $LDLIBS
 
 $OBJCOPY -O binary alloy.elf alloy.bin

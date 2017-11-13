@@ -30,6 +30,10 @@ struct AlloyInput
 
 void alloy_input_init(struct AlloyInput *input);
 
+/** Clears the contents of the input string. */
+
+void alloy_input_clear(struct AlloyInput *input);
+
 /** Sets the tab width. */
 
 void alloy_input_set_tab_width(struct AlloyInput *input,

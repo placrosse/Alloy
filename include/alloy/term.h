@@ -57,6 +57,9 @@ int alloy_term_write(struct AlloyTerm *term,
                      const char *str,
                      unsigned int str_len);
 
+int alloy_term_write_asciiz(struct AlloyTerm *term,
+                            const char *str);
+
 #ifdef __cplusplus
 } /* extern "C" { */
 #endif
