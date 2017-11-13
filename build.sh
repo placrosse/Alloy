@@ -22,6 +22,8 @@ if [ "$BAREMETAL_LIBC_LIBRARY" == "" ]; then
 	exit 1
 fi
 
+NASM=nasm
+
 CC=gcc
 CFLAGS="-m64 -Wall -Wextra -Werror -Wfatal-errors -g -std=gnu99"
 CFLAGS="$CFLAGS -nostdlib -nostartfiles -nodefaultlibs -nostdinc"
@@ -35,9 +37,7 @@ OBJCOPY=objcopy
 
 set -u
 
-$CC $CFLAGS -c loader.c -o loader.o
-$LD -T loader.ld loader.o -o loader.elf
-$OBJCOPY -O binary loader.elf loader.bin
+$NASM loader.asm -o loader.bin
 
 $CC $CFLAGS -c alloy.c -o alloy.o
 $OBJCOPY --remove-section .comment alloy.o
