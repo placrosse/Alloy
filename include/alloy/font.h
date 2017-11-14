@@ -45,6 +45,12 @@ struct AlloyFont
 	/** The number of pixels that a line of text
 	 * should occupy, vertically. */
 	unsigned int line_height;
+	/** From the baseline to the top of the
+	 * font face, in pixels. */
+	unsigned int ascender;
+	/** From the baseline to the botton of the
+	 * font face, in pixels. */
+	unsigned int descender;
 	/** The array of glyphs in the font. */
 	const struct AlloyGlyph *glyph_array;
 	/** The number of glyphs in the glyph array. */
