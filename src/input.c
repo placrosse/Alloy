@@ -63,18 +63,29 @@ void alloy_input_set_tab_width(struct AlloyInput *input,
 	input->tab_width = tab_width;
 }
 
+int alloy_input_backspace(struct AlloyInput *input)
+{
+	if (input->buf_pos <= 0)
+		return 0;
+
+	input->buf_pos--;
+
+	for (unsigned int i = input->buf_pos; i < input->buf_len; i++)
+		input->buf[i] = input->buf[i + 1];
+
+	input->buf[input->buf_len - 1] = 0;
+
+	input->buf_len--;
+
+	return calculate_x_bias(input);
+}
+
 int alloy_input_insert(struct AlloyInput *input, char c)
 {
 	if (input->buf_pos >= input->buf_res)
 		return ALLOY_ERROR_BUFFER_FULL;
 	else if ((c < ' ') && (c > '~') && (c != '\t'))
 		return ALLOY_ERROR_UNKNOWN_CHARACTER;
-
-
-	if (c == '\t')
-	{
-
-	}
 
 	for (unsigned int i = input->buf_len; i > input->buf_pos; i--)
 		input->buf[i] = input->buf[i - 1];
