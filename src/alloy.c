@@ -162,8 +162,19 @@ static int get_input(struct AlloyShell *shell)
 		while (c == 0)
 			c = b_input_key();
 
+		/* enter key */
 		if (c == 0x1c)
 			break;
+
+		/* backspace key */
+		if (c == 0x0e)
+		{
+			alloy_input_backspace(&shell->input);
+			alloy_term_clear_line(&shell->term);
+			alloy_term_write_asciiz(&shell->term, "> ");
+			alloy_term_write(&shell->term, shell->input.buf, shell->input.buf_len);
+			continue;
+		}
 
 		alloy_term_write(&shell->term, &c, 1);
 
