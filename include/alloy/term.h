@@ -17,6 +17,8 @@ struct AlloyTerm
 	/** Called to clear the screen and
 	 * reset the cursor position. */
 	int (*clear)(void *data);
+	/** Gets the current cursor position. */
+	int (*get_cursor)(void *data, unsigned int *line, unsigned int *column);
 	/** Gets the width and height, in character spaces, of the terminal. */
 	int (*get_size)(void *data, unsigned int *width, unsigned int *height);
 	/** Writes text to the screen. */
@@ -36,6 +38,12 @@ void alloy_term_init(struct AlloyTerm *term);
 void alloy_term_done(struct AlloyTerm *term);
 
 int alloy_term_clear(struct AlloyTerm *term);
+
+int alloy_term_clear_line(struct AlloyTerm *term);
+
+int alloy_term_get_cursor(struct AlloyTerm *term,
+                        unsigned int *line,
+                        unsigned int *column);
 
 int alloy_term_get_size(struct AlloyTerm *term,
                         unsigned int *width,
