@@ -4,14 +4,14 @@ CC ?= $(CROSS_COMPILE)gcc
 CFLAGS := $(CFLAGS) -Wall -Wextra -Werror -Wfatal-errors -std=gnu99 -g
 CFLAGS := $(CFLAGS) -I ../include
 
-ifdef ALLOY_WITH_BAREMETAL
+ifdef BAREMETAL_OS
 TOP ?= ../../..
+VPATH += $(TOP)/output/lib
 CFLAGS := $(CFLAGS) -fno-stack-protector -fomit-frame-pointer -mno-red-zone
 CFLAGS := $(CFLAGS) -DALLOY_WITH_BAREMETAL=1
 CFLAGS := $(CFLAGS) -I $(TOP)/output/include
 LD = $(CROSS_COMPILE)ld
-LDFLAGS := $(LDFLAGS) -static -L $(TOP)/output/lib
-LDLIBS := $(LDLIBS) -lbmfs -lc
+LDFLAGS := $(LDFLAGS) -static -T alloy.ld
 targets += alloy.bin
 else
 LD = $(CROSS_COMPILE)gcc
@@ -26,6 +26,8 @@ LDLIBS ?=
 AR ?= $(CROSS_COMPILE)ar
 ARFLAGS = rcs
 
+OBJCOPY ?= $(CROSS_COMPILE)objcopy
+
 VPATH += ../include/alloy
 VPATH += ../utils
 
@@ -38,12 +40,21 @@ libfiles += shell.o
 libfiles += term.o
 libfiles += vesaterm.o
 
+installfiles += $(DESTDIR)$(PREFIX)/bin/alloy.bin
+installfiles += $(DESTDIR)$(PREFIX)/lib/liballoy.a
+installfiles += $(DESTDIR)$(PREFIX)/include/alloy/error.h
+installfiles += $(DESTDIR)$(PREFIX)/include/alloy/font.h
+installfiles += $(DESTDIR)$(PREFIX)/include/alloy/input.h
+installfiles += $(DESTDIR)$(PREFIX)/include/alloy/shell.h
+installfiles += $(DESTDIR)$(PREFIX)/include/alloy/term.h
+installfiles += $(DESTDIR)$(PREFIX)/include/alloy/vesaterm.h
+
 .PHONY: all
 all: $(targets)
 
 alloy.bin: alloy
 
-alloy: alloy.o liballoy.a
+alloy: alloy.o liballoy.a -lbmfs -lc
 
 alloy.o: alloy.c vesaterm.h term.h
 
@@ -81,5 +92,20 @@ clean:
 test: $(tests)
 	./vesaterm-test
 	./input-test
+
+.PHONY: install
+install: $(DESTDIR)$(PREFIX)/include/alloy $(installfiles)
+
+$(DESTDIR)$(PREFIX)/include/alloy/%: %
+	cp $< $@
+
+$(DESTDIR)$(PREFIX)/lib/%: %
+	cp $< $@
+
+$(DESTDIR)$(PREFIX)/bin/%: %
+	cp $< $@
+
+$(DESTDIR)$(PREFIX)/include/alloy:
+	mkdir -p $@
 
 $(V).SILENT:
