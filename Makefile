@@ -2,10 +2,19 @@
 # to run on BareMetal OS.
 #ALLOY_WITH_BAREMETAL ?=
 
-.PHONY: all clean test install
-all clean test install:
+.PHONY: all clean
+all clean:
 	$(MAKE) -C fonts/source-code-pro $@
 	$(MAKE) -C utils $@
+	$(MAKE) -C src $@
+
+.PHONY: test
+test:
+
+.PHONY: install
+install:
+	$(MAKE) -C fonts/source-code-pro
+	$(MAKE) -C utils
 	$(MAKE) -C src $@
 
 $(V).SILENT:
