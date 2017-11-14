@@ -9,18 +9,18 @@
 start:					; Start of program label
 
 	; Read BMFS directory into memory
-	mov rax, 1
-	mov rcx, 1
-	xor rdx, rdx
-	mov rdi, dir
+	mov rax, 1			; Read starting on sector 1 (the second 4K sector)
+	mov rcx, 1			; Read 1 4K sector
+	xor rdx, rdx			; Read from disk 0
+	mov rdi, dir			; Memory address to store sector
 	call [b_disk_read]
 
 	; Check directory for "alloy.bin"
 	mov rsi, dir
 checknext:
 	mov al, byte [rsi]
-	cmp al, 0
-	je error
+	cmp al, 0			; End of directory?
+	je error			; If so, bail out
 	mov rdi, alloyname
 	call string_compare
 	jc loadfile
@@ -29,7 +29,7 @@ checknext:
 
 error:
 	lea rsi, [rel notfound]		; Load error message
-	mov rcx, 33
+	mov rcx, 33			; Output 33 chars
 	call [b_output]			; Output the error
 	jmp $				; Halt
 
