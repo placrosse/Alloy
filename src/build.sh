@@ -11,7 +11,7 @@ CC=gcc
 CFLAGS="-m64 -Wall -Wextra -Werror -Wfatal-errors -g -std=gnu99"
 CFLAGS="$CFLAGS -nostdlib -nostartfiles -nodefaultlibs -nostdinc"
 CFLAGS="$CFLAGS -fomit-frame-pointer -fno-stack-protector -mno-red-zone"
-CFLAGS="$CFLAGS -I $TOP/output/include -I ../include"
+CFLAGS="$CFLAGS -I ../include -I $TOP/output/include"
 
 if ! test -z "$ALLOY_WITH_BAREMETAL"; then
 	CFLAGS="$CFLAGS -DALLOY_WITH_BAREMETAL=1"
