@@ -9,6 +9,7 @@ void alloy_term_init(struct AlloyTerm *term)
 	term->data = NULL;
 	term->done = NULL;
 	term->clear = NULL;
+	term->get_cursor = NULL;
 	term->get_size = NULL;
 	term->toggle_cursor = NULL;
 	term->set_background = NULL;
@@ -29,6 +30,46 @@ int alloy_term_clear(struct AlloyTerm *term)
 		return -EFAULT;
 
 	return term->clear(term->data);
+}
+
+int alloy_term_clear_line(struct AlloyTerm *term)
+{
+	unsigned int width = 0;
+	unsigned int height = 0;
+
+	int err = alloy_term_get_size(term, &width, &height);
+	if (err != 0)
+		return err;
+
+	unsigned int original_line = 0;
+	unsigned int original_column = 0;
+
+	err = alloy_term_get_cursor(term, &original_line, &original_column);
+	if (err != 0)
+		return err;
+
+	err = alloy_term_set_cursor(term, original_line, 1);
+	if (err != 0)
+		return err;
+
+	for (unsigned int i = 0; i < width; i++)
+		alloy_term_write(term, " ", 1);
+
+	err = alloy_term_set_cursor(term, original_line, 1);
+	if (err != 0)
+		return err;
+
+	return 0;
+}
+
+int alloy_term_get_cursor(struct AlloyTerm *term,
+                          unsigned int *line,
+                          unsigned int *column)
+{
+	if (term->get_cursor == NULL)
+		return -1;
+
+	return term->get_cursor(term->data, line, column);
 }
 
 int alloy_term_get_size(struct AlloyTerm *term,
