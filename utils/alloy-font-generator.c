@@ -67,6 +67,8 @@ static void export_footer(FILE *outfile, FT_Face face)
 	fprintf(outfile, "\t\"%s\",\n", face->family_name);
 	fprintf(outfile, "\t\"%s\",\n", face->style_name);
 	fprintf(outfile, "\t%u,\n", face->height >> 6);
+	fprintf(outfile, "\t%u,\n", face->ascender >> 6);
+	fprintf(outfile, "\t%u,\n", face->descender >> 6);
 	fprintf(outfile, "\talloy_glyphs,\n");
 	fprintf(outfile, "\tsizeof(alloy_glyphs) / sizeof(alloy_glyphs[0])\n");
 	fprintf(outfile, "};\n");
