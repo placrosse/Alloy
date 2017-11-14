@@ -35,10 +35,9 @@ error:
 
 loadfile:
 	; Load Alloy to memory
-	add rdi, 32
-	mov rax, [rdi]			; Load the starting block #
+	add rsi, 32
+	mov rax, [rsi]			; Load the starting block #
 	shl rax, 9			; Quick multiply by 512
-	mov rax, 512			; Start at 2MiB
 	mov rcx, 512			; Load 2MiB
 	xor rdx, rdx
 	mov rdi, 0x200000
