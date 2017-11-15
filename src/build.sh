@@ -33,7 +33,8 @@ $CC $CFLAGS -c input.c -o input.o
 $CC $CFLAGS -c shell.c -o shell.o
 $CC $CFLAGS -c term.c -o term.o
 $CC $CFLAGS -c vesaterm.c -o vesaterm.o
+$NASM syscall-hooks.asm -f elf64 -g -F dwarf -o syscall-hooks.o
 
-$LD $LDFLAGS alloy.o font.o input.o shell.o term.o vesaterm.o -o alloy.elf $LDLIBS
+$LD $LDFLAGS alloy.o font.o input.o shell.o syscall-hooks.o term.o vesaterm.o -o alloy.elf $LDLIBS
 
 $OBJCOPY -O binary alloy.elf alloy.bin

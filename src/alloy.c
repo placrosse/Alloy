@@ -46,6 +46,8 @@ int tokens;
 uint64_t disk_offset = 0;
 uint64_t disk_length = 1024 * 1024 * 6;
 unsigned char disk_section[4096];
+struct AlloyTerm *syscall_term;
+extern uint64_t b_output_hook;
 
 /* Strings */
 const char alloy_version[] = "Alloy v0.0.2\n";
@@ -62,12 +64,15 @@ void list_files(struct AlloyShell *shell);
 int load_app(char app[], int tokens);
 void printf_d(struct AlloyShell *shell, int val);
 
+/* syscall hook */
+void alloy_overwrite_syscalls(struct AlloyShell *shell);
+int alloy_output(const char *message, unsigned long long int message_length);
+
 /* disk functions */
 int alloy_seek(void *disk_data, int64_t offset, int whence);
 int alloy_tell(void *disk_data, int64_t *offset);
 int alloy_read(void *disk_data, void *buf, uint64_t buf_len, uint64_t *read_len);
 int alloy_write(void *disk_data, const void *buf, uint64_t buf_len, uint64_t *write_len);
-
 char input_buf[512];
 
 static int get_input(struct AlloyShell *shell);
@@ -106,6 +111,8 @@ int main()
 
 	shell.input = input;
 	shell.term = *term;
+
+	alloy_overwrite_syscalls(&shell);
 
 	while (running == 1)
 	{
@@ -363,6 +370,17 @@ int load_app(char app[], int tokens)
 	app_start();
 
 	return 0;
+}
+
+void alloy_overwrite_syscalls(struct AlloyShell *shell)
+{
+	syscall_term = &shell->term;
+	*((uint64_t *)(0x100018)) = (uint64_t) &b_output_hook;
+}
+
+int alloy_output(const char *message, unsigned long long int message_length)
+{
+	return alloy_term_write(syscall_term, message, message_length);
 }
 
 int alloy_seek(void *disk_data, int64_t offset, int whence)
