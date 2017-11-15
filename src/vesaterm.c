@@ -6,14 +6,46 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+static int vesaterm_scroll_down(struct AlloyVesaTerm *term)
+{
+	unsigned char *dst = (unsigned char *) term->frame_buffer;
+
+	unsigned char *src = &dst[alloy_font.line_height * term->x_res * term->depth / 8];
+
+	for (unsigned int y = 0; y < (term->y_res - alloy_font.line_height); y++)
+	{
+		for (unsigned int x = 0; x < term->x_res; x++)
+		{
+			unsigned int buf_offset = 0;
+			buf_offset += y * term->x_res;
+			buf_offset += x;
+			buf_offset *= term->depth / 8;
+			dst[buf_offset + 0] = src[buf_offset + 0];
+			dst[buf_offset + 1] = src[buf_offset + 1];
+			dst[buf_offset + 2] = src[buf_offset + 2];
+		}
+	}
+
+	return alloy_term_clear_line(&term->base);
+}
+
 static int vesaterm_write_char(struct AlloyVesaTerm *term, char c)
 {
 	if (c == '\n')
 	{
-		term->y_pos += alloy_font.line_height;
-		term->x_pos = 0;
-		term->line++;
 		term->column = 1;
+
+		term->x_pos = 0;
+
+		/* check if we can just scroll down instead of moving
+		 * the cursor downwards */
+		if ((term->y_pos + (alloy_font.line_height * 2)) >= term->y_res)
+			return vesaterm_scroll_down(term);
+
+		term->line++;
+
+		term->y_pos += alloy_font.line_height;
+
 		return 0;
 	}
 	else if (c == '\t')
