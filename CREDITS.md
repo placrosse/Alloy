@@ -1,4 +1,4 @@
 # Credits
 
- - [FreeType](www.freetype.org) - Used for rendering font faces at compile time.
+ - [FreeType](http://www.freetype.org) - Used for rendering font faces at compile time.
 
