@@ -42,8 +42,10 @@ struct AlloyVesaTerm
 	unsigned int y_res;
 	/** The number of bits per pixel. */
 	unsigned int depth;
-	/** A poitner to the frame memory contents. */
+	/** A pointer to the frame memory contents. */
 	unsigned char *frame_buffer;
+	/** A temporary buffer for reading screen contents. */
+	unsigned char *swap_buffer;
 };
 
 /** Initializes the contents of the

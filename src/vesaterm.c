@@ -6,11 +6,19 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <baremetal/syscalls.h>
+
+#ifndef BAREMETAL_PAGE_SIZE
+#define BAREMETAL_PAGE_SIZE (2 * 1024 * 1024)
+#endif
+
 static int vesaterm_scroll_down(struct AlloyVesaTerm *term)
 {
 	unsigned char *dst = (unsigned char *) term->frame_buffer;
 
-	unsigned char *src = &dst[alloy_font.line_height * term->x_res * term->depth / 8];
+	unsigned char *dst_swap = (unsigned char *) term->swap_buffer;
+
+	unsigned char *src = &dst_swap[alloy_font.line_height * term->x_res * term->depth / 8];
 
 	for (unsigned int y = 0; y < (term->y_res - alloy_font.line_height); y++)
 	{
@@ -20,9 +28,14 @@ static int vesaterm_scroll_down(struct AlloyVesaTerm *term)
 			buf_offset += y * term->x_res;
 			buf_offset += x;
 			buf_offset *= term->depth / 8;
+
 			dst[buf_offset + 0] = src[buf_offset + 0];
 			dst[buf_offset + 1] = src[buf_offset + 1];
 			dst[buf_offset + 2] = src[buf_offset + 2];
+
+			dst_swap[buf_offset + 0] = src[buf_offset + 0];
+			dst_swap[buf_offset + 1] = src[buf_offset + 1];
+			dst_swap[buf_offset + 2] = src[buf_offset + 2];
 		}
 	}
 
@@ -83,6 +96,10 @@ static int vesaterm_write_char(struct AlloyVesaTerm *term, char c)
 			term->frame_buffer[buffer_offset + 0] = red;
 			term->frame_buffer[buffer_offset + 1] = green;
 			term->frame_buffer[buffer_offset + 2] = blue;
+
+			term->swap_buffer[buffer_offset + 0] = red;
+			term->swap_buffer[buffer_offset + 1] = green;
+			term->swap_buffer[buffer_offset + 2] = blue;
 		}
 	}
 
@@ -122,6 +139,10 @@ static int vesaterm_write_char(struct AlloyVesaTerm *term, char c)
 			term->frame_buffer[buffer_offset + 0] = red;
 			term->frame_buffer[buffer_offset + 1] = green;
 			term->frame_buffer[buffer_offset + 2] = blue;
+
+			term->swap_buffer[buffer_offset + 0] = red;
+			term->swap_buffer[buffer_offset + 1] = green;
+			term->swap_buffer[buffer_offset + 2] = blue;
 		}
 	}
 
@@ -301,11 +322,19 @@ void alloy_vesaterm_init(struct AlloyVesaTerm *term)
 	term->y_res = *(uint16_t *)(0x5086);
 	term->depth = *(uint8_t *)(0x5088);
 	term->frame_buffer = (unsigned char *)((uint64_t)(*(uint32_t *)(0x5080)));
+	// TODO : calculate the number 
+	uint64_t page_count = 0;
+	page_count += term->x_res * term->y_res;
+	page_count *= term->depth / 8;
+	page_count += BAREMETAL_PAGE_SIZE;
+	page_count /= BAREMETAL_PAGE_SIZE;
+	b_mem_allocate((void **) &term->swap_buffer, page_count);
 #else /* ALLOY_WITH_BAREMETAL */
 	term->x_res = 1024;
 	term->y_res = 768;
 	term->depth = 24;
 	term->frame_buffer = malloc(term->x_res * term->y_res * (term->depth / 8));
+	term->swap_buffer = NULL;
 #endif /* ALLOY_WITH_BAREMETAL */
 }
 
