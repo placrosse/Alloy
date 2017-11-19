@@ -1,4 +1,4 @@
-%.bin: %
+%.bin: %.elf
 	@echo "OBJCOPY $@"
 	$(OBJCOPY) -O binary $< $@
 
@@ -10,6 +10,6 @@
 	@echo "AR $@"
 	$(AR) $(ARFLAGS) $@ $^
 
-%: %.o
+%.elf: %.o
 	@echo "LINK $@"
 	$(LD) $(LDFLAGS) $^ -o $@ $(LDLIBS)
