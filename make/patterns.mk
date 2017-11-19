@@ -8,7 +8,7 @@
 
 %.o: %.asm
 	@echo "NASM $@"
-	$(NASM) $< -o $@
+	$(NASM) $< -f elf64 -o $@
 
 %.a:
 	@echo "AR $@"
