@@ -6,10 +6,10 @@ CFLAGS := $(CFLAGS) -I ../include
 
 ifdef BAREMETAL_OS
 TOP ?= ../../..
-VPATH += $(TOP)/output/lib
+VPATH += $(PREFIX)/lib
 CFLAGS := $(CFLAGS) -fno-stack-protector -fomit-frame-pointer -mno-red-zone
 CFLAGS := $(CFLAGS) -DALLOY_WITH_BAREMETAL=1
-CFLAGS := $(CFLAGS) -I $(TOP)/output/include
+CFLAGS := $(CFLAGS) -I $(PREFIX)/include
 LD = $(CROSS_COMPILE)ld
 LDFLAGS += -static
 targets += alloy.bin
@@ -44,9 +44,9 @@ libfiles += shell.o
 libfiles += term.o
 libfiles += vesaterm.o
 
-installfiles += $(DESTDIR)$(PREFIX)/bin/loader.bin
-installfiles += $(DESTDIR)$(PREFIX)/bin/alloy.elf
-installfiles += $(DESTDIR)$(PREFIX)/bin/alloy.bin
+installfiles += $(DESTDIR)$(PREFIX)/system/loader.bin
+installfiles += $(DESTDIR)$(PREFIX)/system/alloy.elf
+installfiles += $(DESTDIR)$(PREFIX)/system/alloy.bin
 installfiles += $(DESTDIR)$(PREFIX)/lib/liballoy.a
 installfiles += $(DESTDIR)$(PREFIX)/include/alloy/error.h
 installfiles += $(DESTDIR)$(PREFIX)/include/alloy/font.h
@@ -119,7 +119,7 @@ $(DESTDIR)$(PREFIX)/include/alloy/%: %
 $(DESTDIR)$(PREFIX)/lib/%: %
 	cp $< $@
 
-$(DESTDIR)$(PREFIX)/bin/%: %
+$(DESTDIR)$(PREFIX)/system/%: %
 	cp $< $@
 
 $(DESTDIR)$(PREFIX)/include/alloy:
