@@ -6,6 +6,10 @@
 	@echo "CC $@"
 	$(CC) $(CFLAGS) -c $< -o $@
 
+%.o: %.asm
+	@echo "NASM $@"
+	$(NASM) $< -o $@
+
 %.a:
 	@echo "AR $@"
 	$(AR) $(ARFLAGS) $@ $^
