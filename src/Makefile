@@ -5,7 +5,6 @@ CFLAGS := $(CFLAGS) -Wall -Wextra -Werror -Wfatal-errors -std=gnu99 -g
 CFLAGS := $(CFLAGS) -I ../include
 
 ifdef BAREMETAL_OS
-TOP ?= ../../..
 VPATH += $(PREFIX)/lib
 CFLAGS := $(CFLAGS) -fno-stack-protector -fomit-frame-pointer -mno-red-zone
 CFLAGS := $(CFLAGS) -DALLOY_WITH_BAREMETAL=1
@@ -64,10 +63,8 @@ loader.bin: loader.asm
 loader.elf: loader.o
 
 alloy.bin: alloy.elf
-	$(OBJCOPY) -O binary $< $@
 
 alloy.elf: alloy.o liballoy.a syscall-hooks.o -lbmfs -lc
-	$(LD) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
 alloy.elf: LDFLAGS+=-T alloy.ld
 
@@ -104,6 +101,8 @@ clean:
 	$(RM) $(libfiles)
 	$(RM) $(tests) $(tests:=.o)
 	$(RM) liballoy.a
+	$(RM) alloy.bin alloy.elf
+	$(RM) loader.bin
 
 .PHONY: test
 test: $(tests)
@@ -111,18 +110,12 @@ test: $(tests)
 	./input-test
 
 .PHONY: install
-install: $(targets) $(DESTDIR)$(PREFIX)/include/alloy $(installfiles)
-
-$(DESTDIR)$(PREFIX)/include/alloy/%: %
-	cp $< $@
-
-$(DESTDIR)$(PREFIX)/lib/%: %
-	cp $< $@
-
-$(DESTDIR)$(PREFIX)/system/%: %
-	cp $< $@
-
-$(DESTDIR)$(PREFIX)/include/alloy:
-	mkdir -p $@
+install: loader.bin liballoy.a alloy.bin alloy.elf
+	mkdir -p $(DESTDIR)$(PREFIX)/include/alloy
+	cp ../include/alloy/*.h $(DESTDIR)$(PREFIX)/include/alloy
+	cp liballoy.a $(DESTDIR)$(PREFIX)/lib/liballoy.a
+	cp loader.bin $(DESTDIR)$(PREFIX)/system
+	cp alloy.bin $(DESTDIR)$(PREFIX)/system
+	cp alloy.elf $(DESTDIR)$(PREFIX)/system
 
 $(V).SILENT:
