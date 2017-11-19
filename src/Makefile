@@ -11,8 +11,10 @@ CFLAGS := $(CFLAGS) -fno-stack-protector -fomit-frame-pointer -mno-red-zone
 CFLAGS := $(CFLAGS) -DALLOY_WITH_BAREMETAL=1
 CFLAGS := $(CFLAGS) -I $(TOP)/output/include
 LD = $(CROSS_COMPILE)ld
-LDFLAGS := $(LDFLAGS) -static -T alloy.ld
+LDFLAGS += -static
 targets += alloy.bin
+targets += alloy.elf
+targets += loader.bin
 else
 LD = $(CROSS_COMPILE)gcc
 tests += vesaterm-test
@@ -28,6 +30,8 @@ ARFLAGS = rcs
 
 OBJCOPY ?= $(CROSS_COMPILE)objcopy
 
+NASM ?= nasm
+
 VPATH += ../include/alloy
 VPATH += ../utils
 
@@ -40,6 +44,8 @@ libfiles += shell.o
 libfiles += term.o
 libfiles += vesaterm.o
 
+installfiles += $(DESTDIR)$(PREFIX)/bin/loader.bin
+installfiles += $(DESTDIR)$(PREFIX)/bin/alloy.elf
 installfiles += $(DESTDIR)$(PREFIX)/bin/alloy.bin
 installfiles += $(DESTDIR)$(PREFIX)/lib/liballoy.a
 installfiles += $(DESTDIR)$(PREFIX)/include/alloy/error.h
@@ -52,13 +58,24 @@ installfiles += $(DESTDIR)$(PREFIX)/include/alloy/vesaterm.h
 .PHONY: all
 all: $(targets)
 
-alloy.bin: alloy
+loader.bin: loader.asm
+	$(NASM) $< -o $@
 
-alloy: alloy.o liballoy.a -lbmfs -lc
+loader.elf: loader.o
+
+alloy.bin: alloy.elf
+	$(OBJCOPY) -O binary $< $@
+
+alloy.elf: alloy.o liballoy.a syscall-hooks.o -lbmfs -lc
+	$(LD) $(LDFLAGS) $^ -o $@ $(LDLIBS)
+
+alloy.elf: LDFLAGS+=-T alloy.ld
 
 alloy.o: alloy.c vesaterm.h term.h
 
 liballoy.a: $(libfiles)
+
+syscall-hooks.o: syscall-hooks.asm
 
 font.o: font.c font.h
 
@@ -94,7 +111,7 @@ test: $(tests)
 	./input-test
 
 .PHONY: install
-install: $(DESTDIR)$(PREFIX)/include/alloy $(installfiles)
+install: $(targets) $(DESTDIR)$(PREFIX)/include/alloy $(installfiles)
 
 $(DESTDIR)$(PREFIX)/include/alloy/%: %
 	cp $< $@
