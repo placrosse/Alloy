@@ -300,7 +300,7 @@ int load_app(char app[], int tokens)
 	struct BMFSEntry *app_entry;
 	struct BMFSDir dir;
 	struct BMFSDisk disk;
-	void *app_data = NULL;
+	void *app_data = (void *)0xFFFF800000000000;
 	uint64_t app_size = 0;
 	uint64_t app_pages = 0;
 
@@ -335,7 +335,7 @@ int load_app(char app[], int tokens)
 	 * round up one page to make sure enough memory is available */
 	app_pages++;
 
-	b_mem_allocate(&app_data, app_pages);
+//	b_mem_allocate(&app_data, app_pages);
 
 	unsigned char *app_data8 = (unsigned char *) app_data;
 
