@@ -102,7 +102,7 @@ static void alloy_font_plan_init(struct alloy_font_plan *font_plan)
 	font_plan->font_size = 16;
 	font_plan->dpi_x = 72;
 	font_plan->dpi_y = 72;
-	font_plan->glyph_array = " !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+	font_plan->glyph_array = " !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 	font_plan->glyph_count = strlen(font_plan->glyph_array);
 }
 
