@@ -3,17 +3,21 @@
 	$(OBJCOPY) -O binary $< $@
 
 %.o: %.c
-	@echo "CC $@"
+	@echo "CC      $@"
 	$(CC) $(CFLAGS) -c $< -o $@
 
 %.o: %.asm
-	@echo "NASM $@"
+	@echo "NASM    $@"
 	$(NASM) $< -f elf64 -o $@
 
 %.a:
-	@echo "AR $@"
+	@echo "AR      $@"
 	$(AR) $(ARFLAGS) $@ $^
 
+%: %.o
+	@echo "LD      $@"
+	$(LD) $(LDFLAGS) $^ -o $@ $(LDLIBS)
+
 %.elf: %.o
-	@echo "LINK $@"
+	@echo "LD      $@"
 	$(LD) $(LDFLAGS) $^ -o $@ $(LDLIBS)
