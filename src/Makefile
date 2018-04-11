@@ -1,38 +1,10 @@
-include ../make/patterns.mk
+TOP ?= $(CURDIR)/..
+CONFIG ?= default
+include $(TOP)/make/$(CONFIG)-config.mk
+include $(TOP)/make/patterns.mk
 
-CC ?= $(CROSS_COMPILE)gcc
-CFLAGS := $(CFLAGS) -Wall -Wextra -Werror -Wfatal-errors -std=gnu99 -g
-CFLAGS := $(CFLAGS) -I ../include
-
-ifdef BAREMETAL_OS
-VPATH += $(PREFIX)/lib
-CFLAGS := $(CFLAGS) -fno-stack-protector -fomit-frame-pointer -mno-red-zone
-CFLAGS := $(CFLAGS) -DALLOY_WITH_BAREMETAL=1
-CFLAGS := $(CFLAGS) -I $(PREFIX)/include
-LD = $(CROSS_COMPILE)ld
-LDFLAGS += -static
-targets += alloy.bin
-targets += alloy.elf
-targets += loader.bin
-else
-LD = $(CROSS_COMPILE)gcc
-tests += vesaterm-test
-tests += input-test
-endif
-
-LD ?= $(CROSS_COMPILE)ld
-LDFLAGS ?=
-LDLIBS ?=
-
-AR ?= $(CROSS_COMPILE)ar
-ARFLAGS = rcs
-
-OBJCOPY ?= $(CROSS_COMPILE)objcopy
-
-NASM ?= nasm
-
-VPATH += ../include/alloy
-VPATH += ../utils
+VPATH += $(TOP)/include/alloy
+VPATH += $(TOP)/utils
 
 targets += liballoy.a
 targets += $(tests)
@@ -41,18 +13,25 @@ libfiles += font.o
 libfiles += input.o
 libfiles += shell.o
 libfiles += term.o
-libfiles += vesaterm.o
 
+ifdef PLATFORM_baremetal
+libfiles += vesaterm.o
 installfiles += $(DESTDIR)$(PREFIX)/system/loader.bin
 installfiles += $(DESTDIR)$(PREFIX)/system/alloy.elf
 installfiles += $(DESTDIR)$(PREFIX)/system/alloy.bin
+installfiles += $(DESTDIR)$(PREFIX)/include/alloy/vesaterm.h
+endif
+
+ifdef PLATFORM_linux
+libfiles += sdl-term.o
+endif
+
 installfiles += $(DESTDIR)$(PREFIX)/lib/liballoy.a
 installfiles += $(DESTDIR)$(PREFIX)/include/alloy/error.h
 installfiles += $(DESTDIR)$(PREFIX)/include/alloy/font.h
 installfiles += $(DESTDIR)$(PREFIX)/include/alloy/input.h
 installfiles += $(DESTDIR)$(PREFIX)/include/alloy/shell.h
 installfiles += $(DESTDIR)$(PREFIX)/include/alloy/term.h
-installfiles += $(DESTDIR)$(PREFIX)/include/alloy/vesaterm.h
 
 .PHONY: all
 all: $(targets)
@@ -61,6 +40,8 @@ loader.bin: loader.asm
 	$(NASM) $< -o $@
 
 loader.elf: loader.o
+
+alloy: alloy-$(PLATFORM).c liballoy.a -lbmfs
 
 alloy.bin: alloy.elf
 
@@ -77,13 +58,15 @@ syscall-hooks.o: syscall-hooks.asm
 font.o: font.c font.h
 
 font.c: alloy-font-generator
-	./$<
+	$<
 
 input.o: input.c input.h
 
 input-test.o: input-test.c input.h
 
 input-test: input-test.o liballoy.a
+
+sdl-term.o: sdl-term.c sdl-term.h term.h
 
 shell.o: shell.c shell.h term.h input.h
 
