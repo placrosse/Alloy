@@ -2,12 +2,14 @@
 #define ALLOY_SHELL_H
 
 #include <alloy/input.h>
-#include <alloy/term.h>
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+struct AlloyTerm;
+struct AlloyTermData;
 
 /** The structure containing all the
  * callbacks necessary for the alloy program.
@@ -15,8 +17,10 @@ extern "C"
 
 struct AlloyShell
 {
-	/** The terminal interface. */
-	struct AlloyTerm term;
+	/** Contains the callbacks for the terminal interface. */
+	const struct AlloyTerm *term;
+	/** Contains the terminal implementation data. */
+	struct AlloyTermData *term_data;
 	/** The input text. */
 	struct AlloyInput input;
 };
