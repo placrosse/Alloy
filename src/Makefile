@@ -3,12 +3,23 @@ CONFIG ?= default
 include $(TOP)/make/$(CONFIG)-config.mk
 include $(TOP)/make/patterns.mk
 
+BMFS_INCLUDE_DIR ?= /opt/return-infinity/include
+
+BMFS_LIB_DIR ?= /opt/return-infinity/lib
+
+CFLAGS += -I $(BMFS_INCLUDE_DIR)
+
+LDFLAGS += -L $(BMFS_LIB_DIR)
+
 VPATH += $(TOP)/include/alloy
 VPATH += $(TOP)/utils
+VPATH += $(BMFS_LIB_DIR)
 
+targets += alloy
 targets += liballoy.a
 targets += $(tests)
 
+libfiles += color.o
 libfiles += font.o
 libfiles += input.o
 libfiles += shell.o
@@ -24,6 +35,8 @@ endif
 
 ifdef PLATFORM_linux
 libfiles += sdl-term.o
+CFLAGS += $(shell pkg-config --cflags sdl2)
+LDLIBS += $(shell pkg-config --libs sdl2)
 endif
 
 installfiles += $(DESTDIR)$(PREFIX)/lib/liballoy.a
@@ -41,7 +54,7 @@ loader.bin: loader.asm
 
 loader.elf: loader.o
 
-alloy: alloy-$(PLATFORM).c liballoy.a -lbmfs
+alloy: alloy.o liballoy.a -lbmfs
 
 alloy.bin: alloy.elf
 
@@ -49,11 +62,13 @@ alloy.elf: alloy.o liballoy.a syscall-hooks.o -lbmfs -lc
 
 alloy.elf: LDFLAGS+=-T alloy.ld
 
-alloy.o: alloy.c vesaterm.h term.h
+alloy.o: alloy.c term.h shell.h input.h errno.h types.h
 
 liballoy.a: $(libfiles)
 
 syscall-hooks.o: syscall-hooks.asm
+
+color.o: color.c color.h types.h
 
 font.o: font.c font.h
 
