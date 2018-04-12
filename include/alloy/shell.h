@@ -25,6 +25,8 @@ struct AlloyShell
 	struct AlloyTermData *term_data;
 	/** The input text. */
 	struct AlloyInput input;
+	/** Set to @ref ALLOY_TRUE if the shell should exit. */
+	alloy_bool QuitFlag;
 };
 
 void alloy_shell_init(struct AlloyShell *shell);

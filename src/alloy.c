@@ -79,6 +79,9 @@ int main(void)
 
 	for (;;)
 	{
+		if (shell.QuitFlag)
+			break;
+
 		alloy_input_clear(&shell.input);
 
 		alloy_shell_write_asciiz(&shell, "> ");

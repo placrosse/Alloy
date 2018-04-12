@@ -1,6 +1,7 @@
 #include <alloy/shell.h>
 
 #include <alloy/errno.h>
+#include <alloy/keys.h>
 #include <alloy/term.h>
 #include <alloy/types.h>
 
@@ -23,6 +24,7 @@ void alloy_shell_init(struct AlloyShell *shell)
 {
 	shell->term = ALLOY_NULL;
 	shell->term_data = ALLOY_NULL;
+	shell->QuitFlag = ALLOY_FALSE;
 	alloy_input_init(&shell->input);
 }
 
@@ -73,6 +75,9 @@ int alloy_shell_get_char(struct AlloyShell *shell,
 	if (err != 0)
 		return err;
 
+	if (*c == ALLOY_KEY_QUIT)
+		shell->QuitFlag = ALLOY_TRUE;
+
 	return 0;
 }
 
@@ -83,11 +88,11 @@ int alloy_shell_get_line(struct AlloyShell *shell)
 		alloy_utf8 c = 0;
 
 		int err = alloy_shell_get_char(shell, &c);
-		if (err != 0)
+		if ((err != 0) || (c == ALLOY_KEY_QUIT))
 			break;
 
 		/* enter key */
-		if (c == 0x1c)
+		if (c == '\n')
 			break;
 
 		/* backspace key */
