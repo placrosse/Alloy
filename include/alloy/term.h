@@ -1,11 +1,14 @@
 #ifndef ALLOY_TERM_H
 #define ALLOY_TERM_H
 
+#include <alloy/types.h>
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
+struct AlloyColor;
 struct AlloyTermData;
 
 struct AlloyCursorPos
@@ -20,13 +23,6 @@ struct AlloyTermSize
 	unsigned int height;
 };
 
-struct AlloyColor
-{
-	unsigned char red;
-	unsigned char green;
-	unsigned char blue;
-};
-
 struct AlloyTerm
 {
 	struct AlloyTermData *(*init)(void);
@@ -36,6 +32,8 @@ struct AlloyTerm
 	/** Called to clear the screen and
 	 * reset the cursor position. */
 	int (*clear)(struct AlloyTermData *term_data);
+	int (*get_char)(struct AlloyTermData *term_data,
+	                alloy_utf8 *c);
 	/** Gets the current cursor position. */
 	int (*get_cursor)(struct AlloyTermData *term_data,
 	                  struct AlloyCursorPos *cursor_pos);
@@ -44,7 +42,8 @@ struct AlloyTerm
 	                struct AlloyTermSize *term_size);
 	/** Writes text to the screen. */
 	int (*write)(struct AlloyTermData *term_data,
-	             const char *str, unsigned int str_len);
+	             const char *str,
+	             alloy_size str_len);
 	/** Sets the background color. */
 	int (*set_background)(struct AlloyTermData *term_data,
 	                      const struct AlloyColor *background_color);
@@ -66,6 +65,10 @@ int alloy_term_clear(const struct AlloyTerm *term,
 
 int alloy_term_clear_line(const struct AlloyTerm *term,
                           struct AlloyTermData *term_data);
+
+int alloy_term_get_char(const struct AlloyTerm *term,
+                        struct AlloyTermData *term_data,
+                        alloy_utf8 *c);
 
 int alloy_term_get_cursor(const struct AlloyTerm *term,
                           struct AlloyTermData *term_data,

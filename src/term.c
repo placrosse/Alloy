@@ -66,6 +66,16 @@ int alloy_term_clear_line(const struct AlloyTerm *term,
 	return 0;
 }
 
+int alloy_term_get_char(const struct AlloyTerm *term,
+                        struct AlloyTermData *term_data,
+                        alloy_utf8 *c)
+{
+	if (term->get_char == ALLOY_NULL)
+		return ALLOY_ENOSYS;
+	else
+		return term->get_char(term_data, c);
+}
+
 int alloy_term_get_cursor(const struct AlloyTerm *term,
                           struct AlloyTermData *term_data,
                           struct AlloyCursorPos *cursor_pos)
