@@ -34,7 +34,7 @@ installfiles += $(DESTDIR)$(PREFIX)/include/alloy/vesaterm.h
 endif
 
 ifdef PLATFORM_linux
-libfiles += sdl-term.o
+libfiles += xterm.o
 CFLAGS += $(shell pkg-config --cflags sdl2)
 LDLIBS += $(shell pkg-config --libs sdl2)
 endif
@@ -92,6 +92,8 @@ vesaterm.o: vesaterm.c vesaterm.h term.h
 vesaterm-test.o: vesaterm-test.c vesaterm.h term.h
 
 vesaterm-test: vesaterm-test.o liballoy.a
+
+xterm.o: xterm.c xterm.h types.h errno.h
 
 .PHONY: clean
 clean:

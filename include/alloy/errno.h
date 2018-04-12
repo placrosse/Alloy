@@ -22,4 +22,11 @@
 
 #define ALLOY_ENOMEM 2
 
+/** An invalid address was passed
+ * to a function.
+ * @ingroup errno
+ * */
+
+#define ALLOY_EFAULT 3
+
 #endif /* ALLOY_ERRNO_H */

@@ -11,12 +11,14 @@
 #include <alloy/types.h>
 
 #if defined ALLOY_PLATFORM_linux
-#include <alloy/sdl-term.h>
+#include <alloy/xterm.h>
 #elif defined ALLOY_PLATFORM_baremetal
 #include <alloy/vesaterm.h>
 #endif
 
 #include <bmfs/bmfs.h>
+
+#include <stdio.h>
 
 /* Strings */
 const char alloy_version[] = "Alloy v0.0.2\n";
@@ -44,11 +46,14 @@ static alloy_bool is_cmd(const char *arg, const char *cmd)
 	while (!!(*arg) && !!(*cmd))
 	{
 		if (*arg != *cmd)
-			return ALLOY_FALSE;
+			break;
 
 		arg++;
 		cmd++;
 	}
+
+	if ((*arg) != (*cmd))
+		return ALLOY_FALSE;
 
 	return ALLOY_TRUE;
 }
@@ -71,8 +76,10 @@ int main(void)
 
 	alloy_shell_init(&shell);
 
+	alloy_shell_set_input(&shell, &input);
+
 #if defined ALLOY_PLATFORM_linux
-	alloy_shell_set_term(&shell, &alloy_sdl_term);
+	alloy_shell_set_term(&shell, &alloy_xterm);
 #elif defined ALLOY_PLATFORM_baremetal
 	alloy_shell_set_term(&shell, &alloy_vesaterm);
 #endif
@@ -82,7 +89,7 @@ int main(void)
 		if (shell.QuitFlag)
 			break;
 
-		alloy_input_clear(&shell.input);
+		alloy_input_clear(shell.Input);
 
 		alloy_shell_write_asciiz(&shell, "> ");
 
@@ -118,11 +125,15 @@ int main(void)
 				alloy_shell_set_foreground(&shell, &alloy_red);
 				alloy_shell_write_asciiz(&shell, "Unknown command: ");
 				alloy_shell_set_foreground(&shell, &alloy_white);
-				alloy_shell_write_asciiz(&shell, shell.input.buf);
+				alloy_shell_write_asciiz(&shell, shell.Input->buf);
 				alloy_shell_write_asciiz(&shell, "\n");
 			}
 		}
 	}
+
+	alloy_shell_done(&shell);
+
+	return 0;
 }
 
 /* string parse

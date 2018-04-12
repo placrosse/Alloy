@@ -1,7 +1,6 @@
 #ifndef ALLOY_SHELL_H
 #define ALLOY_SHELL_H
 
-#include <alloy/input.h>
 #include <alloy/types.h>
 
 #ifdef __cplusplus
@@ -10,6 +9,7 @@ extern "C"
 #endif
 
 struct AlloyColor;
+struct AlloyInput;
 struct AlloyTerm;
 struct AlloyTermData;
 
@@ -24,7 +24,7 @@ struct AlloyShell
 	/** Contains the terminal implementation data. */
 	struct AlloyTermData *term_data;
 	/** The input text. */
-	struct AlloyInput input;
+	struct AlloyInput *Input;
 	/** Set to @ref ALLOY_TRUE if the shell should exit. */
 	alloy_bool QuitFlag;
 };
@@ -44,6 +44,9 @@ int alloy_shell_get_line(struct AlloyShell *shell);
 
 int alloy_shell_set_foreground(struct AlloyShell *shell,
                                const struct AlloyColor *color);
+
+void alloy_shell_set_input(struct AlloyShell *shell,
+                           struct AlloyInput *input);
 
 void alloy_shell_set_term(struct AlloyShell *shell,
                           const struct AlloyTerm *term);

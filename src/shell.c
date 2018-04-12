@@ -2,6 +2,7 @@
 
 #include <alloy/errno.h>
 #include <alloy/keys.h>
+#include <alloy/input.h>
 #include <alloy/term.h>
 #include <alloy/types.h>
 
@@ -25,7 +26,7 @@ void alloy_shell_init(struct AlloyShell *shell)
 	shell->term = ALLOY_NULL;
 	shell->term_data = ALLOY_NULL;
 	shell->QuitFlag = ALLOY_FALSE;
-	alloy_input_init(&shell->input);
+	shell->Input = ALLOY_NULL;
 }
 
 void alloy_shell_done(struct AlloyShell *shell)
@@ -83,6 +84,9 @@ int alloy_shell_get_char(struct AlloyShell *shell,
 
 int alloy_shell_get_line(struct AlloyShell *shell)
 {
+	if (shell->Input == ALLOY_NULL)
+		return ALLOY_EFAULT;
+
 	for (;;)
 	{
 		alloy_utf8 c = 0;
@@ -91,23 +95,21 @@ int alloy_shell_get_line(struct AlloyShell *shell)
 		if ((err != 0) || (c == ALLOY_KEY_QUIT))
 			break;
 
-		/* enter key */
-		if (c == '\n')
+		if (c == ALLOY_KEY_RETURN)
 			break;
 
-		/* backspace key */
-		if (c == 0x0e)
+		if (c == ALLOY_KEY_BACKSPACE)
 		{
-			alloy_input_backspace(&shell->input);
+			alloy_input_backspace(shell->Input);
 			alloy_shell_clear_line(shell);
 			alloy_shell_write_asciiz(shell, "> ");
-			alloy_shell_write(shell, shell->input.buf, shell->input.buf_len);
+			alloy_shell_write(shell, shell->Input->buf, shell->Input->buf_len);
 			continue;
 		}
 
 		alloy_shell_write(shell, &c, 1);
 
-		alloy_input_insert(&shell->input, c);
+		alloy_input_insert(shell->Input, c);
 	}
 
 	return 0;
@@ -125,6 +127,13 @@ int alloy_shell_set_foreground(struct AlloyShell *shell,
 		return err;
 
 	return 0;
+}
+
+void alloy_shell_set_input(struct AlloyShell *shell,
+                           struct AlloyInput *input)
+{
+	if (input != ALLOY_NULL)
+		shell->Input = input;
 }
 
 void alloy_shell_set_term(struct AlloyShell *shell,
