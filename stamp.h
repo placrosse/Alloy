@@ -1,7 +1,6 @@
-// =====================================================
-// Alloy -- The shell for the BareMetal operating system
-//
-// Copyright (C) 2017 Return Infinity -- see LICENSE
-//
-// Version 1.0
-// =====================================================
+/* ===============================================================
+ * Alloy - A platform-independent terminal and shell program.
+ * Copyright (C) 2017 - 2018 Return Infinity
+ * See LICENSE for license information.
+ * ===============================================================
+ */
