@@ -1,53 +1,22 @@
-/* Alloy - The BareMetal middleware */
-/* Copyright 2017 Return Infinity, Inc */
+/* ===============================================================
+ * Alloy - A platform-independent terminal and shell program.
+ * Copyright (C) 2017 - 2018 Return Infinity
+ * See LICENSE for license information.
+ * ===============================================================
+ */
 
-/* Global includes */
-#include <baremetal/syscalls.h>
-#include <bmfs/bmfs.h>
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
-
+#include <alloy/color.h>
 #include <alloy/shell.h>
 #include <alloy/input.h>
+#include <alloy/types.h>
+
+#if defined ALLOY_PLATFORM_linux
+#include <alloy/sdl-term.h>
+#elif defined ALLOY_PLATFORM_baremetal
 #include <alloy/vesaterm.h>
-
-/* Global macros */
-#ifndef BAREMETAL_PAGE_SIZE
-#define BAREMETAL_PAGE_SIZE (2 * 1024 * 1024)
 #endif
 
-#ifndef ARGC_MAX
-#define ARGC_MAX 3
-#endif
-
-/* Global typedefs */
-typedef unsigned char u8;
-typedef unsigned short u16;
-typedef unsigned int u32;
-typedef unsigned long long u64;
-typedef signed char s8;
-typedef signed short s16;
-typedef signed int s32;
-typedef signed long long s64;
-
-/* Global variables */
-struct app_info {
-	int argc;
-	char *argv[ARGC_MAX + 1];
-	int (*main)(int argc, char **arv);
-};
-/* there's 64 bytes to mess with at
- * this address. make sure app_info
- * does not exceed this limit. */
-struct app_info *app_info = (struct app_info *) 0x110192;
-unsigned short running = 1;
-int tokens;
-uint64_t disk_offset = 0;
-uint64_t disk_length = 1024 * 1024 * 6;
-unsigned char disk_section[4096];
-struct AlloyTerm *syscall_term;
-extern uint64_t b_output_hook;
+#include <bmfs/bmfs.h>
 
 /* Strings */
 const char alloy_version[] = "Alloy v0.0.2\n";
@@ -58,42 +27,35 @@ char exit_string[] = "exit";
 char help_string[] = "help";
 
 /* Built-in functions*/
-size_t str_parse(char str[]);
+alloy_size str_parse(char str[]);
+alloy_size alloy_strlen(const char *str);
 void str_chomp(char str[]);
 void list_files(struct AlloyShell *shell);
 int load_app(char app[], int tokens);
 void printf_d(struct AlloyShell *shell, int val);
 
 /* syscall hook */
-void alloy_overwrite_syscalls(struct AlloyShell *shell);
 int alloy_output(const char *message, unsigned long long int message_length);
 
-/* disk functions */
-int alloy_seek(void *disk_data, int64_t offset, int whence);
-int alloy_tell(void *disk_data, int64_t *offset);
-int alloy_read(void *disk_data, void *buf, uint64_t buf_len, uint64_t *read_len);
-int alloy_write(void *disk_data, const void *buf, uint64_t buf_len, uint64_t *write_len);
 char input_buf[512];
 
-static int get_input(struct AlloyShell *shell);
+static alloy_bool is_cmd(const char *arg, const char *cmd)
+{
+	while (!!(*arg) && !!(*cmd))
+	{
+		if (*arg != *cmd)
+			return ALLOY_FALSE;
+
+		arg++;
+		cmd++;
+	}
+
+	return ALLOY_TRUE;
+}
 
 /* Program code */
-int main()
+int main(void)
 {
-	/* setup the terminal */
-
-	struct AlloyVesaTerm vesaterm;
-
-	alloy_vesaterm_init(&vesaterm);
-
-	struct AlloyTerm *term = &vesaterm.base;
-
-	alloy_term_set_background(term, 0x000000);
-
-	alloy_term_clear(term);
-
-	alloy_term_write_asciiz(term, alloy_version);
-
 	/* setup the input structure */
 
 	struct AlloyInput input;
@@ -109,100 +71,68 @@ int main()
 
 	alloy_shell_init(&shell);
 
-	shell.input = input;
-	shell.term = *term;
+#if defined ALLOY_PLATFORM_linux
+	alloy_shell_set_term(&shell, &alloy_sdl_term);
+#elif defined ALLOY_PLATFORM_baremetal
+	alloy_shell_set_term(&shell, &alloy_vesaterm);
+#endif
 
-	alloy_overwrite_syscalls(&shell);
-
-	while (running == 1)
+	for (;;)
 	{
 		alloy_input_clear(&shell.input);
 
-		alloy_term_write(&shell.term, "> ", 2);
+		alloy_shell_write_asciiz(&shell, "> ");
 
-		get_input(&shell);
+		alloy_shell_get_line(&shell);
 
-		alloy_term_write_asciiz(&shell.term, "\n");
+		alloy_shell_write_asciiz(&shell, "\n");
 
-		tokens = str_parse(input_buf);
+		int tokens = str_parse(input_buf);
 
-		if (strcmp(input_buf, exit_string) == 0)
-			running = 0;
-		else if (load_app(input_buf, tokens) == 0)
+		if (is_cmd(input_buf, exit_string))
+			break;
+		else if (load_app(input_buf, tokens))
 			continue;
-		else if (strcmp(input_buf, cls_string) == 0)
-			alloy_term_clear(&shell.term);
-		else if (strcmp(input_buf, ver_string) == 0)
-			alloy_term_write_asciiz(&shell.term, alloy_version);
-		else if (strcmp(input_buf, dir_string) == 0)
+		else if (is_cmd(input_buf, cls_string))
+			alloy_shell_clear(&shell);
+		else if (is_cmd(input_buf, ver_string))
+			alloy_shell_write_asciiz(&shell, alloy_version);
+		else if (is_cmd(input_buf, dir_string))
 			list_files(&shell);
-		else if (strcmp(input_buf, help_string) == 0)
+		else if (is_cmd(input_buf, help_string))
 		{
-			alloy_term_write_asciiz(&shell.term, "Available commands:\n");
-			alloy_term_write_asciiz(&shell.term, "\tcls  : Clear the screen.\n");
-			alloy_term_write_asciiz(&shell.term, "\tdir  : List the directory entries.\n");
-			alloy_term_write_asciiz(&shell.term, "\texit : Exit the shell.\n");
-			alloy_term_write_asciiz(&shell.term, "\thelp : Print this help message.\n");
-			alloy_term_write_asciiz(&shell.term, "\tver  : Print the current version of Alloy.\n");
+			alloy_shell_write_asciiz(&shell, "Available commands:\n");
+			alloy_shell_write_asciiz(&shell, "\tcls  : Clear the screen.\n");
+			alloy_shell_write_asciiz(&shell, "\tdir  : List the directory entries.\n");
+			alloy_shell_write_asciiz(&shell, "\texit : Exit the shell.\n");
+			alloy_shell_write_asciiz(&shell, "\thelp : Print this help message.\n");
+			alloy_shell_write_asciiz(&shell, "\tver  : Print the current version of Alloy.\n");
 		}
 		else
 		{
 			if (tokens > 0)
 			{
-				alloy_term_set_foreground(&shell.term, 0x1111ff);
-				alloy_term_write_asciiz(&shell.term, "Unknown command: ");
-				alloy_term_set_foreground(&shell.term, 0xffffff);
-				alloy_term_write_asciiz(&shell.term, shell.input.buf);
-				alloy_term_write_asciiz(&shell.term, "\n");
+				alloy_shell_set_foreground(&shell, &alloy_red);
+				alloy_shell_write_asciiz(&shell, "Unknown command: ");
+				alloy_shell_set_foreground(&shell, &alloy_white);
+				alloy_shell_write_asciiz(&shell, shell.input.buf);
+				alloy_shell_write_asciiz(&shell, "\n");
 			}
 		}
 	}
 }
 
-static int get_input(struct AlloyShell *shell)
-{
-	for (;;)
-	{
-		char c = 0;
-		/* poll until a character has
-		 * been entered */
-		while (c == 0)
-			c = b_input_key();
-
-		/* enter key */
-		if (c == 0x1c)
-			break;
-
-		/* backspace key */
-		if (c == 0x0e)
-		{
-			alloy_input_backspace(&shell->input);
-			alloy_term_clear_line(&shell->term);
-			alloy_term_write_asciiz(&shell->term, "> ");
-			alloy_term_write(&shell->term, shell->input.buf, shell->input.buf_len);
-			continue;
-		}
-
-		alloy_term_write(&shell->term, &c, 1);
-
-		alloy_input_insert(&shell->input, c);
-	}
-
-	return 0;
-}
-
 /* string parse
  * Remove extra spaces and return number of words in string
  */
-size_t str_parse(char str[])
+alloy_size str_parse(char str[])
 {
 	str_chomp(str); // remove leading and trailing spaces
 
-	size_t len = strlen(str);
-	size_t x = 0;
+	alloy_size x = 0;
 	int tokens = 0;
 
-	for (size_t i = 0; i < len; i++)
+	for (alloy_size i = 0; str[i] != 0; i++)
 	{
 		if (str[i] == ' ')
 		{
@@ -220,13 +150,25 @@ size_t str_parse(char str[])
 	return tokens;
 }
 
+void list_files(struct AlloyShell *shell)
+{
+	alloy_shell_write_asciiz(shell, "Not implemented.\n");
+}
+
+int load_app(char app[], int tokens)
+{
+	(void) app;
+	(void) tokens;
+	return 0;
+}
+
 /* string chomp
  * Remove leading and trailing spaces from a string
  */
 void str_chomp(char str[])
 {
 	int i = 0, begin = 0;
-	int end = strlen(str) - 1;
+	int end = alloy_strlen(str) - 1;
 
 	while (str[begin] == ' ')
 		begin++;
@@ -239,6 +181,18 @@ void str_chomp(char str[])
 
 	str[i - begin] = '\0';
 }
+
+alloy_size alloy_strlen(const char *str)
+{
+	alloy_size i = 0;
+
+	while (str[i] != 0)
+		i++;
+
+	return i;
+}
+
+#if 0
 
 void list_files(struct AlloyShell *shell)
 {
@@ -478,3 +432,5 @@ void printf_d(struct AlloyShell *shell, int val)
 		f = f/10;
 	}
 }
+
+#endif
