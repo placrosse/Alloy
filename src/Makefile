@@ -21,6 +21,7 @@ targets += $(tests)
 
 libfiles += color.o
 libfiles += font.o
+libfiles += host.o
 libfiles += input.o
 libfiles += shell.o
 libfiles += term.o
@@ -72,6 +73,8 @@ font.o: font.c font.h
 
 font.c: alloy-font-generator
 	$<
+
+host.o: host.c host.h types.h
 
 input.o: input.c input.h
 
