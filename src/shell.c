@@ -2,9 +2,19 @@
 
 #include <alloy/errno.h>
 #include <alloy/keys.h>
+#include <alloy/host.h>
 #include <alloy/input.h>
 #include <alloy/term.h>
 #include <alloy/types.h>
+
+static int prompt(struct AlloyShell *shell)
+{
+	alloy_input_backspace(shell->Input);
+	alloy_shell_clear_line(shell);
+	alloy_shell_write_asciiz(shell, ">-");
+	alloy_shell_write(shell, shell->Input->buf, shell->Input->buf_len);
+	return 0;
+}
 
 static int init_term(struct AlloyShell *shell)
 {
@@ -100,10 +110,7 @@ int alloy_shell_get_line(struct AlloyShell *shell)
 
 		if (c == ALLOY_KEY_BACKSPACE)
 		{
-			alloy_input_backspace(shell->Input);
-			alloy_shell_clear_line(shell);
-			alloy_shell_write_asciiz(shell, "> ");
-			alloy_shell_write(shell, shell->Input->buf, shell->Input->buf_len);
+			prompt(shell);
 			continue;
 		}
 
@@ -127,6 +134,18 @@ int alloy_shell_set_foreground(struct AlloyShell *shell,
 		return err;
 
 	return 0;
+}
+
+void alloy_shell_set_host(struct AlloyShell *shell,
+                          const struct AlloyHost *host)
+{
+	if (shell->host != ALLOY_NULL)
+	{
+		alloy_host_done(shell->host, shell->host_data);
+	}
+
+	shell->host = host;
+	shell->host_data = ALLOY_NULL;
 }
 
 void alloy_shell_set_input(struct AlloyShell *shell,
