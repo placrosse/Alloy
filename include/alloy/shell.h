@@ -9,6 +9,8 @@ extern "C"
 #endif
 
 struct AlloyColor;
+struct AlloyHost;
+struct AlloyHostData;
 struct AlloyInput;
 struct AlloyTerm;
 struct AlloyTermData;
@@ -19,6 +21,10 @@ struct AlloyTermData;
 
 struct AlloyShell
 {
+	/** Contains the callbacks for the host interface. */
+	const struct AlloyHost *host;
+	/** Contains the implementation data for the host. */
+	struct AlloyHostData *host_data;
 	/** Contains the callbacks for the terminal interface. */
 	const struct AlloyTerm *term;
 	/** Contains the terminal implementation data. */
@@ -44,6 +50,9 @@ int alloy_shell_get_line(struct AlloyShell *shell);
 
 int alloy_shell_set_foreground(struct AlloyShell *shell,
                                const struct AlloyColor *color);
+
+void alloy_shell_set_host(struct AlloyShell *shell,
+                          const struct AlloyHost *host);
 
 void alloy_shell_set_input(struct AlloyShell *shell,
                            struct AlloyInput *input);
