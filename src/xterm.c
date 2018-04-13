@@ -7,6 +7,8 @@
 
 #include <alloy/xterm.h>
 
+#include <alloy/color.h>
+#include <alloy/errno.h>
 #include <alloy/keys.h>
 #include <alloy/types.h>
 
@@ -69,13 +71,11 @@ static int xterm_clear(struct AlloyTermData *term_data)
 static int xterm_get_char(struct AlloyTermData *term_data,
                              alloy_utf8 *c)
 {
-	if (fread(c, 1, 1, stdin) != 1)
-		*c = ALLOY_KEY_QUIT;
+	if (fread(c, 1, 1, term_data->in) != 1)
+		return ALLOY_EIO;
 
 	if (*c == '\n')
 		*c = ALLOY_KEY_RETURN;
-
-	(void) term_data;
 
 	return 0;
 }
@@ -100,8 +100,15 @@ static int xterm_get_size(struct AlloyTermData *term_data,
 static int xterm_set_background(struct AlloyTermData *term_data,
                                 const struct AlloyColor *color)
 {
-	(void) term_data;
-	(void) color;
+	if (term_data == ALLOY_NULL)
+		return ALLOY_EFAULT;
+
+	fprintf(term_data->out,
+		"\x1b[48;2;%u;%u;%u;0m",
+		color->red,
+		color->green,
+		color->blue);
+
 	return 0;
 }
 
@@ -116,8 +123,15 @@ static int xterm_set_cursor(struct AlloyTermData *term_data,
 static int xterm_set_foreground(struct AlloyTermData *term_data,
                                 const struct AlloyColor *color)
 {
-	(void) term_data;
-	(void) color;
+	if (term_data == ALLOY_NULL)
+		return ALLOY_EFAULT;
+
+	fprintf(term_data->out,
+		"\x1b[38;2;%u;%u;%um",
+		color->red,
+		color->green,
+		color->blue);
+
 	return 0;
 }
 
