@@ -29,4 +29,10 @@
 
 #define ALLOY_EFAULT 3
 
+/** An input or output error occured.
+ * @ingroup errno
+ * */
+
+#define ALLOY_EIO 4
+
 #endif /* ALLOY_ERRNO_H */
