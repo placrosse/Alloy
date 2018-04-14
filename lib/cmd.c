@@ -189,6 +189,8 @@ int alloy_cmd_parse(struct AlloyCmd *cmd, const char *line)
 			int err = push_arg(cmd, &token->buf[1], token->buf_len - 2);
 			if (err != 0)
 				return err;
+
+			continue;
 		}
 
 		int err = push_arg(cmd, token->buf, token->buf_len);

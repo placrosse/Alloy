@@ -24,7 +24,7 @@ int main(void)
 	alloy_cmd_init(&cmd);
 	alloy_cmd_set_heap(&cmd, &heap);
 
-	int err = alloy_cmd_parse(&cmd, " dir\t./path1 ./path2");
+	int err = alloy_cmd_parse(&cmd, " dir\t\'./path1\' \'./path2\'");
 	assert(err == 0);
 	assert(cmd.id == ALLOY_CMD_DIR);
 	assert(cmd.argc == 3);
