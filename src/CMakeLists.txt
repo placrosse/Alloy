@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.6)
 set (SOURCES "alloy.c")
 
 if (UNIX)
-	list (APPEND SOURCES "xterm.c")
+	list (APPEND SOURCES "xterm.c" "host-linux.c")
 endif (UNIX)
 
 add_executable("alloy-cli" ${SOURCES})
