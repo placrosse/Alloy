@@ -5,6 +5,7 @@
 #include <alloy/keys.h>
 #include <alloy/host.h>
 #include <alloy/input.h>
+#include <alloy/scanner.h>
 #include <alloy/term.h>
 #include <alloy/types.h>
 #include <alloy/version.h>
@@ -27,15 +28,6 @@ static int shell_write_asciiz(struct AlloyShell *shell,
 	if (err != 0)
 		return err;
 
-	return 0;
-}
-
-static int shell_prompt(struct AlloyShell *shell)
-{
-	alloy_input_backspace(shell->input);
-	alloy_term_clear_line(shell->term, shell->term_data);
-	shell_write_asciiz(shell, "> ");
-	shell_write(shell, shell->input->buf, shell->input->buf_len);
 	return 0;
 }
 
@@ -146,6 +138,71 @@ static int shell_set_background(struct AlloyShell *shell,
 	return 0;
 }
 
+static int shell_prompt(struct AlloyShell *shell)
+{
+	alloy_term_clear_line(shell->term, shell->term_data);
+
+	shell_write_asciiz(shell, "> ");
+
+	struct AlloyScanner scanner;
+
+	alloy_scanner_init(&scanner);
+
+	alloy_scanner_set_buf(&scanner, shell->input->buf, shell->input->buf_len);
+
+	while (!alloy_scanner_eof(&scanner))
+	{
+		struct AlloyToken *token = alloy_scanner_next(&scanner);
+		if (token == ALLOY_NULL)
+			break;
+
+		if (token->id == ALLOY_TOKEN_IDENTIFIER)
+		{
+			enum AlloyCmdID cmd_id = alloy_cmd_id_parse(token->buf, token->buf_len);
+			if (cmd_id == ALLOY_CMD_UNKNOWN)
+			{
+				shell_write(shell, token->buf, token->buf_len);
+			}
+			else
+			{
+				shell_set_foreground(shell, &shell->scheme.cmd_builtin);
+				shell_write(shell, token->buf, token->buf_len);
+				shell_set_foreground(shell, &shell->scheme.normal_foreground);
+			}
+		}
+		else if (token->id == ALLOY_TOKEN_NUMERICAL)
+		{
+			shell_set_foreground(shell, &shell->scheme.numerical);
+			shell_write(shell, token->buf, token->buf_len);
+			shell_set_foreground(shell, &shell->scheme.normal_foreground);
+		}
+		else if (token->id == ALLOY_TOKEN_COMMENT)
+		{
+			shell_set_foreground(shell, &shell->scheme.comment);
+			shell_write(shell, token->buf, token->buf_len);
+			shell_set_foreground(shell, &shell->scheme.normal_foreground);
+		}
+		else if (token->id == ALLOY_TOKEN_STRING)
+		{
+			shell_set_foreground(shell, &shell->scheme.string_literal);
+			shell_write(shell, token->buf, token->buf_len);
+			shell_set_foreground(shell, &shell->scheme.normal_foreground);
+		}
+		else if (token->id == ALLOY_TOKEN_ERROR)
+		{
+			shell_set_foreground(shell, &shell->scheme.error);
+			shell_write(shell, token->buf, token->buf_len);
+			shell_set_foreground(shell, &shell->scheme.normal_foreground);
+		}
+		else
+		{
+			shell_write(shell, token->buf, token->buf_len);
+		}
+	}
+
+	return 0;
+}
+
 static int shell_get_char(struct AlloyShell *shell,
                           alloy_utf8 *c)
 {
@@ -165,15 +222,15 @@ static int shell_get_char(struct AlloyShell *shell,
 
 static int shell_get_line(struct AlloyShell *shell)
 {
-	int err = shell_prompt(shell);
-	if (err != 0)
-		return err;
-
 	for (;;)
 	{
+		int err = shell_prompt(shell);
+		if (err != 0)
+			return err;
+
 		alloy_utf8 c = 0;
 
-		int err = shell_get_char(shell, &c);
+		err = shell_get_char(shell, &c);
 		if ((err != 0) || (c == ALLOY_KEY_QUIT))
 			break;
 
@@ -185,11 +242,9 @@ static int shell_get_line(struct AlloyShell *shell)
 
 		if (c == ALLOY_KEY_BACKSPACE)
 		{
-			shell_prompt(shell);
+			alloy_input_backspace(shell->input);
 			continue;
 		}
-
-		shell_write(shell, &c, 1);
 
 		alloy_input_insert(shell->input, c);
 	}

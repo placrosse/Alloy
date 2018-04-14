@@ -42,13 +42,27 @@ enum AlloyCmdID
 	ALLOY_CMD_VERSION
 };
 
-/** Parses a command string.
+/** Parses a string to identify the command
+ * that it contains. The string does not have
+ * to be null terminated.
+ * identify the command that it contains.
+ * @param cmd A pointer to the string to parse.
+ * @param cmd_len The number of bytes in the string,
+ * not including the null-terminator (if there is one.)
+ * @returns The ID of the command.
+ * @ingroup cmd-api
+ * */
+
+enum AlloyCmdID alloy_cmd_id_parse(const char *cmd, alloy_size cmd_len);
+
+/** Parses a null terminated string to
+ * identify the command that it contains.
  * @param cmd A null-terminated command string.
  * @returns The ID of the command.
  * @ingroup cmd-api
  * */
 
-enum AlloyCmdID alloy_cmd_id_parse(const char *cmd);
+enum AlloyCmdID alloy_cmd_id_parse_z(const char *cmd);
 
 /** Encapsulates data for a command.
  * @ingroup cmd-api

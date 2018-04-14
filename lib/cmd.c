@@ -59,61 +59,71 @@ static void free_args(struct AlloyCmd *cmd)
 	cmd->argc = 0;
 }
 
-enum AlloyCmdID alloy_cmd_id_parse(const char *cmd)
+enum AlloyCmdID alloy_cmd_id_parse_z(const char *cmd)
 {
-	if ((cmd[0] == 'c')
+	alloy_size i = 0;
+
+	while (cmd[i] != 0)
+		i++;
+
+	return alloy_cmd_id_parse(cmd, i);
+}
+
+enum AlloyCmdID alloy_cmd_id_parse(const char *cmd, alloy_size cmd_len)
+{
+	if ((cmd_len == 3)
+	 && (cmd[0] == 'c')
 	 && (cmd[1] == 'l')
-	 && (cmd[2] == 's')
-	 && (cmd[3] == 0))
+	 && (cmd[2] == 's'))
 		return ALLOY_CMD_CLEAR;
 
-	if ((cmd[0] == 'c')
+	if ((cmd_len == 5)
+	 && (cmd[0] == 'c')
 	 && (cmd[1] == 'l')
 	 && (cmd[2] == 'e')
 	 && (cmd[3] == 'a')
-	 && (cmd[4] == 'r')
-	 && (cmd[5] == 0))
+	 && (cmd[4] == 'r'))
 		return ALLOY_CMD_CLEAR;
 
-	if ((cmd[0] == 'd')
+	if ((cmd_len == 3)
+	 && (cmd[0] == 'd')
 	 && (cmd[1] == 'i')
-	 && (cmd[2] == 'r')
-	 && (cmd[3] == 0))
+	 && (cmd[2] == 'r'))
 		return ALLOY_CMD_DIR;
 
-	if ((cmd[0] == 'e')
+	if ((cmd_len == 4)
+	 && (cmd[0] == 'e')
 	 && (cmd[1] == 'x')
 	 && (cmd[2] == 'i')
-	 && (cmd[3] == 't')
-	 && (cmd[4] == 0))
+	 && (cmd[3] == 't'))
 		return ALLOY_CMD_EXIT;
 
-	if ((cmd[0] == 'h')
+	if ((cmd_len == 4)
+	 && (cmd[0] == 'h')
 	 && (cmd[1] == 'e')
 	 && (cmd[2] == 'l')
-	 && (cmd[3] == 'p')
-	 && (cmd[4] == 0))
+	 && (cmd[3] == 'p'))
 		return ALLOY_CMD_HELP;
 
-	if ((cmd[0] == 'l')
-	 && (cmd[1] == 's')
-	 && (cmd[2] == 0))
+	if ((cmd_len == 2)
+	 && (cmd[0] == 'l')
+	 && (cmd[1] == 's'))
 		return ALLOY_CMD_DIR;
 
-	if ((cmd[0] == 'v')
+	if ((cmd_len == 3)
+	 && (cmd[0] == 'v')
 	 && (cmd[1] == 'e')
-	 && (cmd[2] == 'r')
-	 && (cmd[3] == 0))
+	 && (cmd[2] == 'r'))
 		return ALLOY_CMD_VERSION;
 
-	if ((cmd[0] == 'v')
+	if ((cmd_len == 7)
+	 && (cmd[0] == 'v')
 	 && (cmd[1] == 'e')
 	 && (cmd[2] == 'r')
 	 && (cmd[3] == 's')
 	 && (cmd[4] == 'i')
 	 && (cmd[5] == 'o')
-	 && (cmd[6] == 'n')
-	 && (cmd[7] == 0))
+	 && (cmd[6] == 'n'))
 		return ALLOY_CMD_VERSION;
 
 	return ALLOY_CMD_UNKNOWN;
@@ -186,7 +196,7 @@ int alloy_cmd_parse(struct AlloyCmd *cmd, const char *line)
 	}
 
 	if (cmd->argc > 0)
-		cmd->id = alloy_cmd_id_parse(cmd->argv[0]);
+		cmd->id = alloy_cmd_id_parse_z(cmd->argv[0]);
 
 	return 0;
 }

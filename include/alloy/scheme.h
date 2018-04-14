@@ -37,6 +37,12 @@ struct AlloyScheme
 	struct AlloyColor normal_foreground;
 	/** The color of a string literal. */
 	struct AlloyColor string_literal;
+	/** The color of a numerical. */
+	struct AlloyColor numerical;
+	/** The color of a comment. */
+	struct AlloyColor comment;
+	/** The color of an error. */
+	struct AlloyColor error;
 };
 
 /** Initializes a scheme to the default.

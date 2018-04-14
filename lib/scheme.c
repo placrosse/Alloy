@@ -36,4 +36,16 @@ void alloy_scheme_init(struct AlloyScheme *scheme)
 	scheme->string_literal.red = 0xa6;
 	scheme->string_literal.green = 0xe2;
 	scheme->string_literal.blue = 0x2e;
+
+	scheme->numerical.red = 0xfd;
+	scheme->numerical.green = 0x97;
+	scheme->numerical.blue = 0x1f;
+
+	scheme->comment.red = 0x66;
+	scheme->comment.green = 0xd9;
+	scheme->comment.blue = 0xef;
+
+	scheme->error.red = 0xba;
+	scheme->error.green = 0x49;
+	scheme->error.blue = 0x2c;
 }
