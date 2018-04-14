@@ -109,7 +109,7 @@ int main(void)
 
 	struct Test test10;
 	test10.id = ALLOY_TOKEN_STRING;
-	test10.buf = "ab";
+	test10.buf = "\'ab\'";
 	assert(test_run(&scanner, &test10) == EXIT_SUCCESS);
 
 	struct Test test11;
@@ -119,7 +119,7 @@ int main(void)
 
 	struct Test test12;
 	test12.id = ALLOY_TOKEN_STRING;
-	test12.buf = "cd";
+	test12.buf = "\"cd\"";
 	assert(test_run(&scanner, &test12) == EXIT_SUCCESS);
 
 	assert(alloy_scanner_eof(&scanner));

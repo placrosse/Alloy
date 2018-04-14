@@ -281,8 +281,8 @@ static struct AlloyToken *string(struct AlloyScanner *scanner)
 
 	struct AlloyToken *token = &scanner->last_token;
 	token->id = ALLOY_TOKEN_STRING;
-	token->buf = &buf[1];
-	token->buf_len = i - 1;
+	token->buf = buf;
+	token->buf_len = i + 1;
 
 	scanner->buf_pos += i + 1;
 
@@ -294,6 +294,7 @@ static struct AlloyToken *error(struct AlloyScanner *scanner)
 	scanner->last_token.id = ALLOY_TOKEN_ERROR;
 	scanner->last_token.buf = &scanner->buf[scanner->buf_pos];
 	scanner->last_token.buf_len = 1;
+	scanner->buf_pos++;
 	return &scanner->last_token;
 }
 
