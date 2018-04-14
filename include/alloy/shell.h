@@ -1,6 +1,7 @@
 #ifndef ALLOY_SHELL_H
 #define ALLOY_SHELL_H
 
+#include <alloy/heap.h>
 #include <alloy/types.h>
 
 #ifdef __cplusplus
@@ -25,47 +26,34 @@ struct AlloyShell
 	const struct AlloyHost *host;
 	/** Contains the implementation data for the host. */
 	struct AlloyHostData *host_data;
+	/** Used to manage memory allocated by the shell
+	 * and sub structures of the shell. */
+	struct AlloyHeap heap;
 	/** Contains the callbacks for the terminal interface. */
 	const struct AlloyTerm *term;
 	/** Contains the terminal implementation data. */
 	struct AlloyTermData *term_data;
 	/** The input text. */
-	struct AlloyInput *Input;
+	struct AlloyInput *input;
 	/** Set to @ref ALLOY_TRUE if the shell should exit. */
-	alloy_bool QuitFlag;
+	alloy_bool quit_flag;
+	/** Set to @ref ALLOY_TRUE if the heap was initialized. */
+	alloy_bool heap_ready;
 };
 
 void alloy_shell_init(struct AlloyShell *shell);
 
 void alloy_shell_done(struct AlloyShell *shell);
 
-int alloy_shell_clear(struct AlloyShell *shell);
+int alloy_shell_run(struct AlloyShell *shell);
 
-int alloy_shell_clear_line(struct AlloyShell *shell);
-
-int alloy_shell_get_char(struct AlloyShell *shell,
-                         alloy_utf8 *c);
-
-int alloy_shell_get_line(struct AlloyShell *shell);
-
-int alloy_shell_set_foreground(struct AlloyShell *shell,
-                               const struct AlloyColor *color);
+int alloy_shell_run_once(struct AlloyShell *shell);
 
 void alloy_shell_set_host(struct AlloyShell *shell,
                           const struct AlloyHost *host);
 
-void alloy_shell_set_input(struct AlloyShell *shell,
-                           struct AlloyInput *input);
-
 void alloy_shell_set_term(struct AlloyShell *shell,
                           const struct AlloyTerm *term);
-
-int alloy_shell_write(struct AlloyShell *shell,
-                      const char *str,
-                      alloy_size str_size);
-
-int alloy_shell_write_asciiz(struct AlloyShell *shell,
-                             const char *str);
 
 #ifdef __cplusplus
 } /* extern "C" */
