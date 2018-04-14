@@ -12,6 +12,7 @@ add_library("alloy"
 	"heap.c"
 	"host.c"
 	"input.c"
+	"scanner.c"
 	"scheme.c"
 	"shell.c"
 	"term.c")
@@ -27,5 +28,7 @@ add_alloy_test("cmd-test" "cmd-test.c")
 add_alloy_test("heap-test" "heap-test.c")
 
 add_alloy_test("input-test" "input-test.c")
+
+add_alloy_test("scanner-test" "scanner-test.c")
 
 enable_testing()
