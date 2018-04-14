@@ -1,0 +1,81 @@
+/* ===============================================================
+ * Alloy - A platform-independent terminal and shell program.
+ * Copyright (C) 2017 - 2018 Return Infinity
+ * See LICENSE for license information.
+ * ===============================================================
+ */
+
+#ifndef ALLOY_CMD_H
+#define ALLOY_CMD_H
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+/** @defgroup cmd-api Command API
+ * Deals with the parsing and execution
+ * of a command.
+ * */
+
+/** Enumerates the builtin commands.
+ * @ingroup cmd-api
+ * */
+
+enum AlloyCmdID
+{
+	/** Clears the screen. */
+	ALLOY_CMD_CLEAR,
+	/** List directory contents. */
+	ALLOY_CMD_DIR,
+	/** Exits the shell. */
+	ALLOY_CMD_EXIT,
+	/** Prints help contents. */
+	ALLOY_CMD_HELP,
+	/** The command was not recognized. */
+	ALLOY_CMD_UNKNOWN,
+	/** Print the version of Alloy. */
+	ALLOY_CMD_VERSION
+};
+
+/** Parses a command string.
+ * @param cmd A null-terminated command string.
+ * @returns The ID of the command.
+ * @ingroup cmd-api
+ * */
+
+enum AlloyCmdID alloy_cmd_id_parse(const char *cmd);
+
+/** Encapsulates data for a command.
+ * @ingroup cmd-api
+ * */
+
+struct AlloyCmd
+{
+	/** The command identifier. */
+	enum AlloyCmdID id;
+};
+
+/** Initializes a command structure.
+ * @param cmd The command structure to initialize.
+ * @ingroup cmd-api
+ * */
+
+void alloy_cmd_init(struct AlloyCmd *cmd);
+
+/** Parses a command from a null-terminated string.
+ * @param cmd An initialized command structure.
+ * @param line The line to parse the command from.
+ * @returns Zero on success, an error code on failure.
+ * If the command is unknown, zero is still returned.
+ * The id of the command ends up being @ref ALLOY_CMD_UNKNOWN.
+ * @ingroup cmd-api
+ * */
+
+int alloy_cmd_parse(struct AlloyCmd *cmd, const char *line);
+
+#ifdef __cplusplus
+} /* extern "C" { */
+#endif
+
+#endif /* ALLOY_CMD_H */

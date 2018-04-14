@@ -19,6 +19,7 @@ targets += alloy
 targets += liballoy.a
 targets += $(tests)
 
+libfiles += cmd.o
 libfiles += color.o
 libfiles += font.o
 libfiles += host.o
@@ -66,6 +67,8 @@ alloy.o: alloy.c term.h shell.h input.h errno.h types.h
 liballoy.a: $(libfiles)
 
 syscall-hooks.o: syscall-hooks.asm
+
+cmd.o: cmd.c cmd.h
 
 color.o: color.c color.h types.h
 
