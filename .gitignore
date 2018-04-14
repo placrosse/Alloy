@@ -4,6 +4,9 @@
 *.obj
 *.elf
 
+# CMake build directory
+/build
+
 # Generated bitmap images
 /src/vesaterm-test.bmp
 

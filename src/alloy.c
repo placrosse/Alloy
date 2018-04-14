@@ -16,8 +16,6 @@
 #include <alloy/vesaterm.h>
 #endif
 
-#include <bmfs/bmfs.h>
-
 /* Strings */
 const char alloy_version[] = "Alloy v0.0.2\n";
 char cls_string[] = "cls";
