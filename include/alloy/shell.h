@@ -1,6 +1,14 @@
+/* ===============================================================
+ * Alloy - A platform-independent terminal and shell program.
+ * Copyright (C) 2017 - 2018 Return Infinity
+ * See LICENSE for license information.
+ * ===============================================================
+ */
+
 #ifndef ALLOY_SHELL_H
 #define ALLOY_SHELL_H
 
+#include <alloy/theme.h>
 #include <alloy/heap.h>
 #include <alloy/types.h>
 
@@ -9,7 +17,6 @@ extern "C"
 {
 #endif
 
-struct AlloyColor;
 struct AlloyHost;
 struct AlloyHostData;
 struct AlloyInput;
@@ -39,6 +46,8 @@ struct AlloyShell
 	alloy_bool quit_flag;
 	/** Set to @ref ALLOY_TRUE if the heap was initialized. */
 	alloy_bool heap_ready;
+	/** The color theme for the terminal interface. */
+	struct AlloyTheme theme;
 };
 
 void alloy_shell_init(struct AlloyShell *shell);
