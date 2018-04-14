@@ -18,6 +18,7 @@
 
 struct AlloyTermData
 {
+	alloy_size tab_size;
 	FILE *out;
 	FILE *in;
 	struct AlloyCursorPos pos;
@@ -34,6 +35,9 @@ static struct AlloyTermData *xterm_init(void)
 	term_data->in = stdin;
 	term_data->pos.line = 1;
 	term_data->pos.column = 1;
+
+	/* TODO : get tab size from terminal. */
+	term_data->tab_size = 8;
 
 	/* Get a copy of the terminal
 	 * attributes so we can restore them
@@ -57,15 +61,6 @@ static void xterm_done(struct AlloyTermData *term_data)
 	tcsetattr(1, TCSANOW, &term_data->original_attr);
 
 	free(term_data);
-}
-
-static int xterm_clear(struct AlloyTermData *term_data)
-{
-	(void) term_data;
-
-	printf("\x1b[2J\x1b[H");
-
-	return 0;
 }
 
 static int xterm_get_char(struct AlloyTermData *term_data,
@@ -117,6 +112,22 @@ static int xterm_set_cursor(struct AlloyTermData *term_data,
 {
 	term_data->pos.line = pos->line;
 	term_data->pos.column = pos->column;
+
+	fprintf(term_data->out,
+	        "\x1b[%u;%uH\n",
+	        (unsigned int) pos->line,
+	        (unsigned int) pos->column);
+
+	return 0;
+}
+
+static int xterm_clear(struct AlloyTermData *term_data)
+{
+	printf("\x1b[2J\x1b[H");
+
+	term_data->pos.column = 1;
+	term_data->pos.line = 1;
+
 	return 0;
 }
 
@@ -139,9 +150,31 @@ static int xterm_write(struct AlloyTermData *term_data,
                        const char *str,
                        alloy_size str_size)
 {
-	(void) term_data;
-
-	fwrite(str, 1, str_size, stdout);
+	for (alloy_size i = 0; i < str_size; i++)
+	{
+		char c = str[i];
+		if (c == '\t')
+		{
+			term_data->pos.column += term_data->tab_size - (term_data->pos.column % term_data->tab_size);
+			fputc(c, term_data->out);
+		}
+		else if (c == '\n')
+		{
+			term_data->pos.line++;
+			term_data->pos.column = 1;
+			fputc(c, term_data->out);
+		}
+		else if (c == '\r')
+		{
+			term_data->pos.column = 1;
+			fputc(c, term_data->out);
+		}
+		else
+		{
+			fputc(c, term_data->out);
+			term_data->pos.column++;
+		}
+	}
 
 	return 0;
 }
