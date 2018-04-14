@@ -95,8 +95,8 @@ void alloy_heap_free(struct AlloyHeap *heap,
  * */
 
 void *alloy_heap_realloc(struct AlloyHeap *heap,
-                         alloy_size size,
-                         void *addr);
+                         void *addr,
+                         alloy_size size);
 
 #ifdef __cplusplus
 } /* extern "C" */

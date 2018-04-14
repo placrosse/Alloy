@@ -46,7 +46,7 @@ static struct AlloyHeapEnt *make_ent(struct AlloyHeap *heap)
 
 	struct AlloyHeapEnt *entries = heap->entries;
 
-	entries = alloy_heap_realloc(heap, new_size, entries);
+	entries = alloy_heap_realloc(heap, entries, new_size);
 	if (entries == ALLOY_NULL)
 		return ALLOY_NULL;
 
@@ -139,8 +139,8 @@ void *alloy_heap_malloc(struct AlloyHeap *heap,
 }
 
 void *alloy_heap_realloc(struct AlloyHeap *heap,
-                         alloy_size size,
-                         void *addr)
+                         void *addr,
+                         alloy_size size)
 {
 	if (addr == ALLOY_NULL)
 		return alloy_heap_malloc(heap, size);
@@ -169,6 +169,9 @@ void *alloy_heap_realloc(struct AlloyHeap *heap,
 void alloy_heap_free(struct AlloyHeap *heap,
                      void *addr)
 {
+	if (addr == ALLOY_NULL)
+		return;
+
 	struct AlloyHeapEnt *ent = find_ent(heap, addr);
 	if (ent == ALLOY_NULL)
 		return;
