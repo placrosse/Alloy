@@ -18,10 +18,12 @@ VPATH += $(BMFS_LIB_DIR)
 
 ifdef PLATFORM_linux
 objfiles += xterm.o
+objfiles += host-linux.o
 endif
 
 ifdef PLATFORM_baremetal
 objfiles += vesaterm.o
+objfiles += host-baremetal.o
 endif
 
 targets += alloy
@@ -51,15 +53,17 @@ font.o: font.c font.h
 font.c: alloy-font-generator
 	$<
 
-sdl-term.o: sdl-term.c sdl-term.h term.h
+host-linux.o: host-linux.c ./host.h $(TOP)/include/alloy/host.h types.h errno.h
 
-vesaterm.o: vesaterm.c vesaterm.h term.h
+sdl-term.o: sdl-term.c ./term.h $(TOP)/include/alloy/term.h types.h errno.h
 
-vesaterm-test.o: vesaterm-test.c vesaterm.h term.h
+vesaterm.o: vesaterm.c ./term.h $(TOP)/include/alloy/term.h types.h errno.h
+
+vesaterm-test.o: vesaterm-test.c ./term.h $(TOP)/include/alloy/term.h types.h errno.h
 
 vesaterm-test: vesaterm-test.o liballoy.a
 
-xterm.o: xterm.c xterm.h types.h errno.h
+xterm.o: xterm.c ./term.h $(TOP)/include/alloy/term.h types.h errno.h
 
 .PHONY: clean
 clean:
