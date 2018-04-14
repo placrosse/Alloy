@@ -1,126 +1,135 @@
 #include <alloy/input.h>
 
+#include <alloy/heap.h>
+
 #include <assert.h>
 #include <stdlib.h>
 
-char tmp_buffer[16];
+unsigned char buf[128];
 
 static void test_insert(void)
 {
-	struct AlloyInput alloy_input;
+	struct AlloyHeap heap;
+	alloy_heap_init(&heap, buf, sizeof(buf));
 
-	alloy_input_init(&alloy_input);
-
-	alloy_input.buf = tmp_buffer;
-	alloy_input.buf_len = 0;
-	alloy_input.buf_res = sizeof(tmp_buffer);
-	alloy_input.x_bias = 0;
+	struct AlloyInput input;
+	alloy_input_init(&input);
+	alloy_input_set_heap(&input, &heap);
 
 	/* test back to back insertion */
 
-	int err = alloy_input_insert(&alloy_input, 'a');
+	int err = alloy_input_insert(&input, 'a');
 	assert(err == 0);
-	assert(alloy_input.buf_len == 1);
-	assert(alloy_input.buf[0] == 'a');
-	assert(alloy_input.buf_pos == 1);
-	assert(alloy_input.x_bias == 1);
+	assert(input.buf_len == 1);
+	assert(input.buf[0] == 'a');
+	assert(input.buf_pos == 1);
+	assert(input.x_bias == 1);
 
-	err = alloy_input_insert(&alloy_input, 'c');
+	err = alloy_input_insert(&input, 'c');
 	assert(err == 0);
-	assert(alloy_input.buf_len == 2);
-	assert(alloy_input.buf[0] == 'a');
-	assert(alloy_input.buf[1] == 'c');
-	assert(alloy_input.buf_pos == 2);
-	assert(alloy_input.x_bias == 2);
+	assert(input.buf_len == 2);
+	assert(input.buf[0] == 'a');
+	assert(input.buf[1] == 'c');
+	assert(input.buf_pos == 2);
+	assert(input.x_bias == 2);
 
 	/* test insertion between two characters */
 
-	alloy_input.buf_pos = 1;
+	input.buf_pos = 1;
 
-	err = alloy_input_insert(&alloy_input, 'b');
+	err = alloy_input_insert(&input, 'b');
 	assert(err == 0);
-	assert(alloy_input.buf_len == 3);
-	assert(alloy_input.buf[0] == 'a');
-	assert(alloy_input.buf[1] == 'b');
-	assert(alloy_input.buf[2] == 'c');
-	assert(alloy_input.buf_pos == 2);
+	assert(input.buf_len == 3);
+	assert(input.buf[0] == 'a');
+	assert(input.buf[1] == 'b');
+	assert(input.buf[2] == 'c');
+	assert(input.buf_pos == 2);
 	/* x_bias should be 2, but that can
 	 * be ignored because the change in
 	 * position was 'faked' to test the
 	 * insertion between characters */
-	/* assert(alloy_input.x_bias == 2); */
+	/* assert(input.x_bias == 2); */
 
 	/* set the x bias to a correct value
 	 * manually */
-	alloy_input.x_bias = 2;
+	input.x_bias = 2;
 
 	/* test insertion of a newline */
-	err = alloy_input_insert(&alloy_input, '\n');
+	err = alloy_input_insert(&input, '\n');
 	assert(err == 0);
-	assert(alloy_input.buf_len == 4);
-	assert(alloy_input.buf[0] == 'a');
-	assert(alloy_input.buf[1] == 'b');
-	assert(alloy_input.buf[2] == '\n');
-	assert(alloy_input.buf[3] == 'c');
-	assert(alloy_input.buf_pos == 3);
-	assert(alloy_input.x_bias == 0);
+	assert(input.buf_len == 4);
+	assert(input.buf[0] == 'a');
+	assert(input.buf[1] == 'b');
+	assert(input.buf[2] == '\n');
+	assert(input.buf[3] == 'c');
+	assert(input.buf_pos == 3);
+	assert(input.x_bias == 0);
 
 	/* test insertion of a tab */
 
 	/* set tab width, so avoid a failing test
 	 * because a default value changed */
-	alloy_input_set_tab_width(&alloy_input, 4);
+	alloy_input_set_tab_width(&input, 4);
 
-	err = alloy_input_insert(&alloy_input, '\t');
+	err = alloy_input_insert(&input, '\t');
 	assert(err == 0);
-	assert(alloy_input.buf_len == 5);
-	assert(alloy_input.buf[0] == 'a');
-	assert(alloy_input.buf[1] == 'b');
-	assert(alloy_input.buf[2] == '\n');
-	assert(alloy_input.buf[3] == '\t');
-	assert(alloy_input.buf[4] == 'c');
-	assert(alloy_input.buf_pos == 4);
-	assert(alloy_input.x_bias == 4);
+	assert(input.buf_len == 5);
+	assert(input.buf[0] == 'a');
+	assert(input.buf[1] == 'b');
+	assert(input.buf[2] == '\n');
+	assert(input.buf[3] == '\t');
+	assert(input.buf[4] == 'c');
+	assert(input.buf_pos == 4);
+	assert(input.x_bias == 4);
+
+	alloy_input_done(&input);
 }
 
 static void test_movement(void)
 {
-	struct AlloyInput alloy_input;
+	struct AlloyHeap heap;
+	alloy_heap_init(&heap, buf, sizeof(buf));
 
-	alloy_input_init(&alloy_input);
+	struct AlloyInput input;
+	alloy_input_init(&input);
+	alloy_input_set_heap(&input, &heap);
 
 	/* check for left movement */
 
-	alloy_input.buf = tmp_buffer;
-	alloy_input.buf[0] = 'a';
-	alloy_input.buf[1] = '\n';
-	alloy_input.buf[2] = 'b';
-	alloy_input.buf[3] = 'c';
-	alloy_input.buf[4] = 'd';
-	alloy_input.buf_len = 5;
-	alloy_input.buf_pos = 5;
-	alloy_input.buf_res = sizeof(tmp_buffer);
+	int err = alloy_input_reserve(&input, 5);
+	assert(err == 0);
+
+	input.buf[0] = 'a';
+	input.buf[1] = '\n';
+	input.buf[2] = 'b';
+	input.buf[3] = 'c';
+	input.buf[4] = 'd';
+	input.buf_len = 5;
+	input.buf_pos = 5;
+
 	/* x bias could be anything at this point.
 	 * it should be adjusting to the current
 	 * line on left and right arrows */
-	alloy_input.x_bias = 55;
+	input.x_bias = 55;
 
-	int err = alloy_input_left(&alloy_input);
+	err = alloy_input_left(&input);
 	assert(err == 0);
-	assert(alloy_input.buf_pos == 4);
-	assert(alloy_input.x_bias == 2);
+	assert(input.buf_pos == 4);
+	assert(input.x_bias == 2);
 
-	err |= alloy_input_left(&alloy_input);
-	err |= alloy_input_left(&alloy_input);
-	err |= alloy_input_left(&alloy_input);
+	err |= alloy_input_left(&input);
+	err |= alloy_input_left(&input);
+	err |= alloy_input_left(&input);
 	assert(err == 0);
-	assert(alloy_input.buf_pos == 1);
-	assert(alloy_input.x_bias == 1);
+	assert(input.buf_pos == 1);
+	assert(input.x_bias == 1);
 
-	err = alloy_input_right(&alloy_input);
+	err = alloy_input_right(&input);
 	assert(err == 0);
-	assert(alloy_input.buf_pos == 2);
-	assert(alloy_input.x_bias == 0);
+	assert(input.buf_pos == 2);
+	assert(input.x_bias == 0);
+
+	alloy_input_done(&input);
 }
 
 static void test_backspace(void)
