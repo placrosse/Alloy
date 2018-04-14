@@ -127,15 +127,16 @@ void *alloy_heap_malloc(struct AlloyHeap *heap,
 	if (new_ent == ALLOY_NULL)
 		return ALLOY_NULL;
 
-	new_ent->addr = find_region(heap, size);
-	if (new_ent->addr == ALLOY_NULL)
+	unsigned char *addr = find_region(heap, size);
+	if (addr == ALLOY_NULL)
 		return ALLOY_NULL;
 
+	new_ent->addr = addr;
 	new_ent->size = size;
 
 	sort_heap(heap);
 
-	return new_ent->addr;
+	return addr;
 }
 
 void *alloy_heap_realloc(struct AlloyHeap *heap,
