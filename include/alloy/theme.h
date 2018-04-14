@@ -31,6 +31,10 @@ struct AlloyTheme
 	struct AlloyColor cmd_builtin;
 	/** The color of an external command. */
 	struct AlloyColor cmd_external;
+	/** The default background color. */
+	struct AlloyColor normal_background;
+	/** The default foreground color. */
+	struct AlloyColor normal_foreground;
 };
 
 /** Initializes a theme to the default.
