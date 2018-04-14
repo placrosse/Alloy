@@ -9,6 +9,20 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
+
+static int check_mem(unsigned char *addr,
+                     alloy_size size,
+                     alloy_uint8 value)
+{
+	for (alloy_size i = 0; i < size; i++)
+	{
+		if (addr[i] != value)
+			return -1;
+	}
+
+	return 0;
+}
 
 int main(void) {
 
@@ -23,14 +37,19 @@ int main(void) {
 
 	unsigned char *addr1 = alloy_heap_malloc(&heap, 24);
 	assert(addr1 != ALLOY_NULL);
+	memset(addr1, 0x3f, 24);
 
 	unsigned char *addr2 = alloy_heap_malloc(&heap, 32);
 	assert(addr2 != ALLOY_NULL);
-	assert(addr2 >= (addr1 + 24));
+	memset(addr2, 0x71, 32);
 
 	unsigned char *addr3 = alloy_heap_malloc(&heap, 48);
 	assert(addr3 != ALLOY_NULL);
-	assert(addr3 >= (addr2 + 32));
+	memset(addr3, 0x02, 48);
+
+	assert(check_mem(addr1, 24, 0x3f) == 0);
+	assert(check_mem(addr2, 32, 0x71) == 0);
+	assert(check_mem(addr3, 48, 0x02) == 0);
 
 	/* Test that memory is properly reallocated. */
 
