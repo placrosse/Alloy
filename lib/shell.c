@@ -350,10 +350,17 @@ static int cmd_dir(struct AlloyShell *shell,
 		if ((ent->name[0] == '.') && !list_all)
 			continue;
 
-		shell_write_asciiz(shell, "  ");
+		if (ent->type == ALLOY_DIR_ENT_FILE)
+			shell_write_asciiz(shell, "  file : ");
+		else
+			shell_write_asciiz(shell, "  dir  : ");
+
+		shell_set_foreground(shell, &shell->scheme.string_literal);
 		shell_write_asciiz(shell, "\"");
 		shell_write_asciiz(shell, ent->name);
-		shell_write_asciiz(shell, "\"\n");
+		shell_write_asciiz(shell, "\"");
+		shell_set_foreground(shell, &shell->scheme.normal_foreground);
+		shell_write_asciiz(shell, "\n");
 	}
 
 	shell_closedir(shell, dir);

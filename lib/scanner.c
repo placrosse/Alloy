@@ -325,6 +325,17 @@ void alloy_scanner_set_buf(struct AlloyScanner *scanner,
 	scanner->column = 1;
 }
 
+void alloy_scanner_set_buf_z(struct AlloyScanner *scanner,
+                             const char *buf_z)
+{
+	alloy_size i = 0;
+
+	while (buf_z[i] != 0)
+		i++;
+
+	alloy_scanner_set_buf(scanner, buf_z, i);
+}
+
 struct AlloyToken *alloy_scanner_next(struct AlloyScanner *scanner)
 {
 	if (alloy_scanner_eof(scanner))

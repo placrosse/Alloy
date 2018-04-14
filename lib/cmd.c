@@ -9,6 +9,7 @@
 
 #include <alloy/errno.h>
 #include <alloy/heap.h>
+#include <alloy/scanner.h>
 
 static int push_arg(struct AlloyCmd *cmd,
                     const char *arg,
@@ -16,6 +17,10 @@ static int push_arg(struct AlloyCmd *cmd,
 {
 	if (cmd->heap == ALLOY_NULL)
 		return ALLOY_EFAULT;
+
+	/* Don't push empty strings */
+	if (arglen == 0)
+		return 0;
 
 	alloy_size argc = cmd->argc + 1;
 
@@ -155,42 +160,38 @@ int alloy_cmd_parse(struct AlloyCmd *cmd, const char *line)
 
 	free_args(cmd);
 
-	alloy_size argpos = 0;
-	alloy_size arglen = 0;
-	alloy_size i = 0;
+	struct AlloyScanner scanner;
 
-	while (line[i] != 0)
+	alloy_scanner_init(&scanner);
+
+	alloy_scanner_set_buf_z(&scanner, line);
+
+	while (!alloy_scanner_eof(&scanner))
 	{
-		if ((line[i] == ' ')
-		 || (line[i] == '\t')
-		 || (line[i] == '\n'))
+		struct AlloyToken *token = alloy_scanner_next(&scanner);
+		if (token == ALLOY_NULL)
 		{
-			if (arglen == 0)
-			{
-				i++;
+			break;
+		}
+		else if ((token->id == ALLOY_TOKEN_COMMENT)
+		      || (token->id == ALLOY_TOKEN_NEWLINE)
+		      || (token->id == ALLOY_TOKEN_SPACE))
+		{
+			continue;
+		}
+		else if (token->id == ALLOY_TOKEN_STRING)
+		{
+			/* Just do a sanity check to avoid
+			 * integer overflow on buf_len. */
+			if (token->buf_len < 2)
 				continue;
-			}
 
-			int err = push_arg(cmd, &line[argpos], arglen);
+			int err = push_arg(cmd, &token->buf[1], token->buf_len - 2);
 			if (err != 0)
 				return err;
-
-			arglen = 0;
-		}
-		else
-		{
-			if (arglen == 0)
-				argpos = i;
-
-			arglen++;
 		}
 
-		i++;
-	}
-
-	if (arglen > 0)
-	{
-		int err = push_arg(cmd, &line[argpos], arglen);
+		int err = push_arg(cmd, token->buf, token->buf_len);
 		if (err != 0)
 			return err;
 	}

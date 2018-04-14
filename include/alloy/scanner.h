@@ -114,6 +114,17 @@ void alloy_scanner_set_buf(struct AlloyScanner *scanner,
                            const char *buf,
                            alloy_size buf_len);
 
+/** Sets the string buffer to be scanned.
+ * This function calculates the length of the
+ * string by searching for the null-terminator.
+ * @param scanner An initialized scanner structure.
+ * @param buf_z A null-terminated string.
+ * @ingroup scanner-api
+ * */
+
+void alloy_scanner_set_buf_z(struct AlloyScanner *scanner,
+                             const char *buf_z);
+
 /** Resets the scanner to the beginning of the string buffer.
  * @param scanner An initialized scanner structure.
  * @ingroup scanner-api
