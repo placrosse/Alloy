@@ -70,6 +70,32 @@ struct AlloyHostData *alloy_host_init(const struct AlloyHost *host);
 void alloy_host_done(const struct AlloyHost *host,
                      struct AlloyHostData *host_data);
 
+/** Get information about the host.
+ * @param host An initialized host structure.
+ * @param host_data Host implementation data.
+ * @param host_info The structure that will end
+ * up containing the host information.
+ * @returns Zero on success, an error code on failure.
+ * @ingroup host-api
+ * */
+
+int alloy_host_get_info(const struct AlloyHost *host,
+                        struct AlloyHostData *host_data,
+                        struct AlloyHostInfo *host_info);
+
+/** Allocates a series of pages.
+ * @param host An initialized host structure.
+ * @param host_data Host implementation data.
+ * @param page_count The number of pages to allocate.
+ * @returns On success, the address of the pages.
+ * On failure, @ref ALLOY_NULL is returned.
+ * @ingroup host-api
+ * */
+
+void *alloy_host_alloc_pages(const struct AlloyHost *host,
+                             struct AlloyHostData *host_data,
+                             alloy_size page_count);
+
 #ifdef __cplusplus
 } /* extern "C" { */
 #endif
