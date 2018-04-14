@@ -8,10 +8,14 @@
 #ifndef ALLOY_CMD_H
 #define ALLOY_CMD_H
 
+#include <alloy/types.h>
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+struct AlloyHeap;
 
 /** @defgroup cmd-api Command API
  * Deals with the parsing and execution
@@ -52,8 +56,15 @@ enum AlloyCmdID alloy_cmd_id_parse(const char *cmd);
 
 struct AlloyCmd
 {
+	/** A pointer to the heap, used for
+	 * dynamic memory allocation. */
+	struct AlloyHeap *heap;
 	/** The command identifier. */
 	enum AlloyCmdID id;
+	/** The number of command arguments. */
+	alloy_size argc;
+	/** The command argument array. */
+	char **argv;
 };
 
 /** Initializes a command structure.
@@ -62,6 +73,16 @@ struct AlloyCmd
  * */
 
 void alloy_cmd_init(struct AlloyCmd *cmd);
+
+/** Assigns the heap to be used for the command
+ * data to dynamically grow.
+ * @param cmd An initialized command structure.
+ * @param heap An initialized heap structure.
+ * @ingroup heap-api
+ * */
+
+void alloy_cmd_set_heap(struct AlloyCmd *cmd,
+                        struct AlloyHeap *heap);
 
 /** Parses a command from a null-terminated string.
  * @param cmd An initialized command structure.
