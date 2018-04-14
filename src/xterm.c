@@ -99,7 +99,7 @@ static int xterm_set_background(struct AlloyTermData *term_data,
 		return ALLOY_EFAULT;
 
 	fprintf(term_data->out,
-		"\x1b[48;2;%u;%u;%u;0m",
+		"\x1b[48;2;%u;%u;%um",
 		color->red,
 		color->green,
 		color->blue);
