@@ -35,6 +35,8 @@ struct AlloyTheme
 	struct AlloyColor normal_background;
 	/** The default foreground color. */
 	struct AlloyColor normal_foreground;
+	/** The color of a string literal. */
+	struct AlloyColor string_literal;
 };
 
 /** Initializes a theme to the default.

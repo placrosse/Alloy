@@ -32,4 +32,8 @@ void alloy_theme_init(struct AlloyTheme *theme)
 	theme->normal_background.red = 0x27;
 	theme->normal_background.green = 0x28;
 	theme->normal_background.blue = 0x22;
+
+	theme->string_literal.red = 0xa6;
+	theme->string_literal.green = 0xe2;
+	theme->string_literal.blue = 0x2e;
 }

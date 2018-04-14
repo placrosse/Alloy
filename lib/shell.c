@@ -249,9 +249,15 @@ static int cmd_dir(struct AlloyShell *shell,
 	if (cmd->argc > 1)
 		path = cmd->argv[1];
 
-	shell_write_asciiz(shell, "Failed to open '");
+	shell_write_asciiz(shell, "Failed to open ");
+
+	shell_set_foreground(shell, &shell->theme.string_literal);
+	shell_write_asciiz(shell, "'");
 	shell_write_asciiz(shell, path);
-	shell_write_asciiz(shell, "'.\n");
+	shell_write_asciiz(shell, "'");
+	shell_set_foreground(shell, &shell->theme.normal_foreground);
+
+	shell_write_asciiz(shell, "\n");
 
 	return 0;
 }
@@ -268,9 +274,15 @@ static int cmd_unknown(struct AlloyShell *shell,
 		return 0;
 	}
 
-	shell_write_asciiz(shell, "Unknown command: '\n");
+	shell_write_asciiz(shell, "Unknown command: ");
+
+	shell_set_foreground(shell, &shell->theme.string_literal);
+	shell_write_asciiz(shell, "'");
 	shell_write_asciiz(shell, cmd->argv[0]);
-	shell_write_asciiz(shell, "'.\n");
+	shell_write_asciiz(shell, "'");
+	shell_set_foreground(shell, &shell->theme.normal_foreground);
+
+	shell_write_asciiz(shell, ".\n");
 
 	return 0;
 }
