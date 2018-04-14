@@ -134,7 +134,7 @@ int alloy_input_backspace(struct AlloyInput *input)
 
 int alloy_input_insert(struct AlloyInput *input, char c)
 {
-	if (input->buf_pos >= input->buf_res)
+	if ((input->buf_pos + 1) >= input->buf_res)
 	{
 		alloy_size new_size = ((input->buf_pos + 63) / 64) * 64;
 
@@ -150,7 +150,14 @@ int alloy_input_insert(struct AlloyInput *input, char c)
 		input->buf[i] = input->buf[i - 1];
 
 	input->buf[input->buf_pos++] = c;
+
 	input->buf_len++;
+
+	/* Add the null-terminator, if the
+	 * character was added to the end of
+	 * the string. */
+	if (input->buf_pos >= input->buf_len)
+		input->buf[input->buf_pos] = 0;
 
 	if (c == '\n')
 		input->x_bias = 0;
