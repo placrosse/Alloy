@@ -18,8 +18,6 @@
 
 #include <bmfs/bmfs.h>
 
-#include <stdio.h>
-
 /* Strings */
 const char alloy_version[] = "Alloy v0.0.2\n";
 char cls_string[] = "cls";
