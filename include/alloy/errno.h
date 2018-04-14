@@ -35,4 +35,11 @@
 
 #define ALLOY_EIO 4
 
+/** An invalid argument was passed
+ * to a function.
+ * @ingroup errno
+ * */
+
+#define ALLOY_EINVAL 5
+
 #endif /* ALLOY_ERRNO_H */
