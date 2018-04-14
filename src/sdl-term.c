@@ -1,4 +1,11 @@
-#include <alloy/sdl-term.h>
+/* ===============================================================
+ * Alloy - A platform-independent terminal and shell program.
+ * Copyright (C) 2017 - 2018 Return Infinity
+ * See LICENSE for license information.
+ * ===============================================================
+ */
+
+#include "term.h"
 
 #include <alloy/keys.h>
 #include <alloy/types.h>
@@ -103,7 +110,7 @@ static int sdl_term_get_char(struct AlloyTermData *term_data,
 	return 0;
 }
 
-const struct AlloyTerm alloy_sdl_term = {
+const struct AlloyTerm alloy_term = {
 	sdl_term_init,
 	sdl_term_done,
 	ALLOY_NULL /* clear */,

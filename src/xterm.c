@@ -5,7 +5,7 @@
  * ===============================================================
  */
 
-#include <alloy/xterm.h>
+#include "term.h"
 
 #include <alloy/color.h>
 #include <alloy/errno.h>
@@ -146,7 +146,7 @@ static int xterm_write(struct AlloyTermData *term_data,
 	return 0;
 }
 
-const struct AlloyTerm alloy_xterm = {
+const struct AlloyTerm alloy_term = {
 	xterm_init,
 	xterm_done,
 	xterm_clear,
