@@ -12,9 +12,9 @@ add_library("alloy"
 	"heap.c"
 	"host.c"
 	"input.c"
+	"scheme.c"
 	"shell.c"
-	"term.c"
-	"theme.c")
+	"term.c")
 
 function(ADD_ALLOY_TEST TEST)
 	add_executable(${TEST} ${ARGN})

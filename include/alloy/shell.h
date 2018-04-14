@@ -8,7 +8,7 @@
 #ifndef ALLOY_SHELL_H
 #define ALLOY_SHELL_H
 
-#include <alloy/theme.h>
+#include <alloy/scheme.h>
 #include <alloy/heap.h>
 #include <alloy/types.h>
 
@@ -46,8 +46,8 @@ struct AlloyShell
 	alloy_bool quit_flag;
 	/** Set to @ref ALLOY_TRUE if the heap was initialized. */
 	alloy_bool heap_ready;
-	/** The color theme for the terminal interface. */
-	struct AlloyTheme theme;
+	/** The color scheme for the terminal interface. */
+	struct AlloyScheme scheme;
 };
 
 void alloy_shell_init(struct AlloyShell *shell);

@@ -210,9 +210,9 @@ static int cmd_help_print_cmd(struct AlloyShell *shell,
 {
 	shell_write_asciiz(shell, "  ");
 
-	shell_set_foreground(shell, &shell->theme.cmd_builtin);
+	shell_set_foreground(shell, &shell->scheme.cmd_builtin);
 	shell_write_asciiz(shell, name);
-	shell_set_foreground(shell, &shell->theme.normal_foreground);
+	shell_set_foreground(shell, &shell->scheme.normal_foreground);
 
 	shell_write_asciiz(shell, " : ");
 	shell_write_asciiz(shell, desc);
@@ -251,11 +251,11 @@ static int cmd_dir(struct AlloyShell *shell,
 
 	shell_write_asciiz(shell, "Failed to open ");
 
-	shell_set_foreground(shell, &shell->theme.string_literal);
+	shell_set_foreground(shell, &shell->scheme.string_literal);
 	shell_write_asciiz(shell, "'");
 	shell_write_asciiz(shell, path);
 	shell_write_asciiz(shell, "'");
-	shell_set_foreground(shell, &shell->theme.normal_foreground);
+	shell_set_foreground(shell, &shell->scheme.normal_foreground);
 
 	shell_write_asciiz(shell, "\n");
 
@@ -276,11 +276,11 @@ static int cmd_unknown(struct AlloyShell *shell,
 
 	shell_write_asciiz(shell, "Unknown command: ");
 
-	shell_set_foreground(shell, &shell->theme.string_literal);
+	shell_set_foreground(shell, &shell->scheme.string_literal);
 	shell_write_asciiz(shell, "'");
 	shell_write_asciiz(shell, cmd->argv[0]);
 	shell_write_asciiz(shell, "'");
-	shell_set_foreground(shell, &shell->theme.normal_foreground);
+	shell_set_foreground(shell, &shell->scheme.normal_foreground);
 
 	shell_write_asciiz(shell, ".\n");
 
@@ -343,7 +343,7 @@ void alloy_shell_init(struct AlloyShell *shell)
 	shell->term_data = ALLOY_NULL;
 	shell->quit_flag = ALLOY_FALSE;
 	shell->input = ALLOY_NULL;
-	alloy_theme_init(&shell->theme);
+	alloy_scheme_init(&shell->scheme);
 }
 
 void alloy_shell_done(struct AlloyShell *shell)
@@ -402,8 +402,8 @@ int alloy_shell_run_once(struct AlloyShell *shell)
 		return err;
 	}
 
-	shell_set_foreground(shell, &shell->theme.normal_foreground);
-	shell_set_background(shell, &shell->theme.normal_background);
+	shell_set_foreground(shell, &shell->scheme.normal_foreground);
+	shell_set_background(shell, &shell->scheme.normal_background);
 
 	err = shell_run_cmd(shell);
 	if (err != 0)

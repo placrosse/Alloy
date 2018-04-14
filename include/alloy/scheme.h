@@ -5,8 +5,8 @@
  * ===============================================================
  */
 
-#ifndef ALLOY_THEME_H
-#define ALLOY_THEME_H
+#ifndef ALLOY_SCHEME_H
+#define ALLOY_SCHEME_H
 
 #include <alloy/color.h>
 
@@ -15,17 +15,17 @@ extern "C"
 {
 #endif
 
-/** @defgroup theme-api Theme API
- * Deals with the color theme for the
+/** @defgroup scheme-api Scheme API
+ * Deals with the color scheme for the
  * terminal interface.
  * */
 
-/** Describes the theme for the
- * terminal interface.
- * @ingroup theme-api
+/** Describes the color scheme for
+ * the terminal interface.
+ * @ingroup scheme-api
  * */
 
-struct AlloyTheme
+struct AlloyScheme
 {
 	/** The color of a builtin command. */
 	struct AlloyColor cmd_builtin;
@@ -39,15 +39,15 @@ struct AlloyTheme
 	struct AlloyColor string_literal;
 };
 
-/** Initializes a theme to the default.
- * @param theme The theme structure to initialize.
- * @ingroup theme-api
+/** Initializes a scheme to the default.
+ * @param scheme The scheme structure to initialize.
+ * @ingroup scheme-api
  * */
 
-void alloy_theme_init(struct AlloyTheme *theme);
+void alloy_scheme_init(struct AlloyScheme *scheme);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif /* ALLOY_THEME_H */
+#endif /* ALLOY_SCHEME_H */
