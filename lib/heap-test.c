@@ -32,5 +32,32 @@ int main(void) {
 	assert(addr3 != ALLOY_NULL);
 	assert(addr3 >= (addr2 + 32));
 
+	/* Test that memory is properly reallocated. */
+
+	/* Assign data so we can check if it was moved
+	 * during the reallocation. */
+	addr1[0] = '3';
+	addr1[1] = '1';
+	addr1[2] = '4';
+	addr1[3] = '1';
+	addr1[22] = '5';
+	addr1[23] = '9';
+
+	unsigned char *addr4 = alloy_heap_realloc(&heap, addr1, 64);
+	assert(addr4 != ALLOY_NULL);
+	/* It's not a requirement that these addresses
+	 * are different, but for testing purposes it
+	 * should be. The reallocation should be large
+	 * enough that the memory has to be moved somewhere
+	 * else. That is the only way we can test that the
+	 * data is being moved properly. */
+	assert(addr4 != addr1);
+	assert(addr4[0] == '3');
+	assert(addr4[1] == '1');
+	assert(addr4[2] == '4');
+	assert(addr4[3] == '1');
+	assert(addr4[22] == '5');
+	assert(addr4[23] == '9');
+
 	return EXIT_SUCCESS;
 }
