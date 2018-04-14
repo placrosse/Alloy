@@ -43,3 +43,33 @@ void *alloy_host_alloc_pages(const struct AlloyHost *host,
 
 	return host->alloc_pages(host_data, page_count);
 }
+
+
+struct AlloyDir *alloy_host_opendir(const struct AlloyHost *host,
+                                    struct AlloyHostData *host_data,
+                                    const char *path)
+{
+	if (host->opendir == ALLOY_NULL)
+		return ALLOY_NULL;
+	else
+		return host->opendir(host_data, path);
+}
+
+struct AlloyDirEnt *alloy_host_readdir(const struct AlloyHost *host,
+                                       struct AlloyHostData *host_data,
+                                       struct AlloyDir *dir)
+{
+	if (host->readdir == ALLOY_NULL)
+		return ALLOY_NULL;
+	else
+		return host->readdir(host_data, dir);
+}
+
+void alloy_host_closedir(const struct AlloyHost *host,
+                         struct AlloyHostData *host_data,
+                         struct AlloyDir *dir)
+{
+	if (host->closedir != ALLOY_NULL)
+		host->closedir(host_data, dir);
+}
+

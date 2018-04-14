@@ -7,12 +7,25 @@
 
 #include "host.h"
 
-#include <stdlib.h>
 #include <unistd.h>
+#include <dirent.h>
 #include <sys/mman.h>
 
-struct AlloyHostData {
+#include <stdlib.h>
+#include <string.h>
+
+struct AlloyHostData
+{
 	alloy_size page_size;
+};
+
+struct AlloyDir
+{
+	struct {
+		DIR *dir;
+		struct dirent *ent;
+	} host;
+	struct AlloyDirEnt current_ent;
 };
 
 static struct AlloyHostData *host_init(void)
@@ -36,6 +49,60 @@ static struct AlloyHostData *host_init(void)
 static void host_done(struct AlloyHostData *host_data)
 {
 	free(host_data);
+}
+
+static struct AlloyDir *host_opendir(struct AlloyHostData *host_data,
+                                     const char *path)
+{
+	(void) host_data;
+
+	struct AlloyDir *dir = malloc(sizeof(*dir));
+	if (dir == NULL)
+		return ALLOY_NULL;
+
+	dir->host.dir = opendir(path);
+	if (dir->host.dir == NULL)
+	{
+		free(dir);
+		return ALLOY_NULL;
+	}
+
+	return dir;
+}
+
+static struct AlloyDirEnt *host_readdir(struct AlloyHostData *host_data,
+                                        struct AlloyDir *dir)
+{
+	(void) host_data;
+
+	dir->host.ent = readdir(dir->host.dir);
+	if (dir->host.ent == NULL)
+		return ALLOY_NULL;
+
+	strcpy(dir->current_ent.name, dir->host.ent->d_name);
+
+	/* TODO support other file types. */
+
+	if (dir->host.ent->d_type == DT_DIR)
+		dir->current_ent.type = ALLOY_DIR_ENT_DIR;
+	else
+		dir->current_ent.type = ALLOY_DIR_ENT_FILE;
+
+	return &dir->current_ent;
+}
+
+static void host_closedir(struct AlloyHostData *host_data,
+                          struct AlloyDir *dir)
+{
+	(void) host_data;
+
+	if (dir != ALLOY_NULL)
+	{
+		if (dir->host.dir != NULL)
+			closedir(dir->host.dir);
+
+		free(dir);
+	}
 }
 
 static int host_get_info(struct AlloyHostData *host_data,
@@ -71,6 +138,9 @@ static void host_free_pages(struct AlloyHostData *host_data,
 const struct AlloyHost alloy_host = {
 	host_init,
 	host_done,
+	host_opendir,
+	host_readdir,
+	host_closedir,
 	host_get_info,
 	host_alloc_pages,
 	host_free_pages

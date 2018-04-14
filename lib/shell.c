@@ -252,6 +252,24 @@ static int shell_get_line(struct AlloyShell *shell)
 	return 0;
 }
 
+static struct AlloyDir *shell_opendir(struct AlloyShell *shell,
+                                      const char *path)
+{
+	return alloy_host_opendir(shell->host, shell->host_data, path);
+}
+
+static struct AlloyDirEnt *shell_readdir(struct AlloyShell *shell,
+                                      struct AlloyDir *dir)
+{
+	return alloy_host_readdir(shell->host, shell->host_data, dir);
+}
+
+static void shell_closedir(struct AlloyShell *shell,
+                                       struct AlloyDir *dir)
+{
+	alloy_host_closedir(shell->host, shell->host_data, dir);
+}
+
 static int cmd_version(struct AlloyShell *shell)
 {
 	shell_write_asciiz(shell, ALLOY_VERSION_STRING);
@@ -299,20 +317,46 @@ static int cmd_clear(struct AlloyShell *shell)
 static int cmd_dir(struct AlloyShell *shell,
                    struct AlloyCmd *cmd)
 {
-	const char *path = "/";
+	const char *path = "./";
 
 	if (cmd->argc > 1)
 		path = cmd->argv[1];
 
-	shell_write_asciiz(shell, "Failed to open ");
+	alloy_bool list_all = ALLOY_FALSE;
 
-	shell_set_foreground(shell, &shell->scheme.string_literal);
-	shell_write_asciiz(shell, "'");
-	shell_write_asciiz(shell, path);
-	shell_write_asciiz(shell, "'");
-	shell_set_foreground(shell, &shell->scheme.normal_foreground);
+	struct AlloyDir *dir = shell_opendir(shell, path);
 
-	shell_write_asciiz(shell, "\n");
+	if (dir == ALLOY_NULL)
+	{
+		shell_write_asciiz(shell, "Failed to open ");
+
+		shell_set_foreground(shell, &shell->scheme.string_literal);
+		shell_write_asciiz(shell, "'");
+		shell_write_asciiz(shell, path);
+		shell_write_asciiz(shell, "'");
+		shell_set_foreground(shell, &shell->scheme.normal_foreground);
+
+		shell_write_asciiz(shell, "\n");
+
+		return 0;
+	}
+
+	for (;;)
+	{
+		struct AlloyDirEnt *ent = shell_readdir(shell, dir);
+		if (ent == ALLOY_NULL)
+			break;
+
+		if ((ent->name[0] == '.') && !list_all)
+			continue;
+
+		shell_write_asciiz(shell, "  ");
+		shell_write_asciiz(shell, "\"");
+		shell_write_asciiz(shell, ent->name);
+		shell_write_asciiz(shell, "\"\n");
+	}
+
+	shell_closedir(shell, dir);
 
 	return 0;
 }
