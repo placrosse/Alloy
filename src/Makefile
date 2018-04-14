@@ -15,6 +15,9 @@ VPATH += $(TOP)/include/alloy
 VPATH += $(TOP)/utils
 VPATH += $(BMFS_LIB_DIR)
 
+tests += input-test
+tests += heap-test
+
 targets += alloy
 targets += liballoy.a
 targets += $(tests)
@@ -22,6 +25,7 @@ targets += $(tests)
 libfiles += cmd.o
 libfiles += color.o
 libfiles += font.o
+libfiles += heap.o
 libfiles += host.o
 libfiles += input.o
 libfiles += shell.o
@@ -77,6 +81,12 @@ font.o: font.c font.h
 font.c: alloy-font-generator
 	$<
 
+heap.o: heap.c heap.h types.h errno.h
+
+heap-test.o: heap-test.c heap.h types.h
+
+heap-test: heap-test.o liballoy.a
+
 host.o: host.c host.h types.h
 
 input.o: input.c input.h
@@ -110,7 +120,7 @@ clean:
 
 .PHONY: test
 test: $(tests)
-	./vesaterm-test
+	./heap-test
 	./input-test
 
 .PHONY: install
