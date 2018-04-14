@@ -126,7 +126,7 @@ void alloy_cmd_init(struct AlloyCmd *cmd)
 	cmd->argc = 0;
 }
 
-void alloy_cmd_free(struct AlloyCmd *cmd)
+void alloy_cmd_done(struct AlloyCmd *cmd)
 {
 	free_args(cmd);
 }
