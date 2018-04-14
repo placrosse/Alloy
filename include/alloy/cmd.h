@@ -74,11 +74,18 @@ struct AlloyCmd
 
 void alloy_cmd_init(struct AlloyCmd *cmd);
 
+/** Releases memory allocated by the command.
+ * @param cmd An initialized command structure.
+ * @ingroup cmd-api
+ * */
+
+void alloy_cmd_done(struct AlloyCmd *cmd);
+
 /** Assigns the heap to be used for the command
  * data to dynamically grow.
  * @param cmd An initialized command structure.
  * @param heap An initialized heap structure.
- * @ingroup heap-api
+ * @ingroup cmd-api
  * */
 
 void alloy_cmd_set_heap(struct AlloyCmd *cmd,
