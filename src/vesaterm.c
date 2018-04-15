@@ -8,12 +8,9 @@
 #include "term.h"
 
 #include <alloy/color.h>
+#include <alloy/errno.h>
 #include <alloy/font.h>
 #include <alloy/keys.h>
-
-#include <errno.h>
-#include <stdint.h>
-#include <stdlib.h>
 
 #include <baremetal/syscalls.h>
 
@@ -98,9 +95,8 @@ static int vesaterm_write_char(struct AlloyTermData *term, char c)
 	}
 
 	const struct AlloyGlyph *glyph = alloy_font_get_glyph(&alloy_font, c);
-	if (glyph == NULL)
-		/* TODO : better error code ? */
-		return -EINVAL;
+	if (glyph == ALLOY_NULL)
+		return ALLOY_EINVAL;
 
 	/* color in the background */
 
@@ -220,7 +216,7 @@ static int vesaterm_get_size(struct AlloyTermData *term,
 	 * */
 
 	const struct AlloyGlyph *space_glyph = alloy_font_get_glyph(&alloy_font, ' ');
-	if (space_glyph == NULL)
+	if (space_glyph == ALLOY_NULL)
 		return -1;
 
 	size->width = term->x_res / space_glyph->advance;
@@ -254,7 +250,7 @@ static int vesaterm_set_cursor(struct AlloyTermData *term,
 	 */
 
 	const struct AlloyGlyph *space_glyph = alloy_font_get_glyph(&alloy_font, ' ');
-	if (space_glyph == NULL)
+	if (space_glyph == ALLOY_NULL)
 		return -1;
 
 	term->x_pos = (pos->column - 1) * space_glyph->advance;
@@ -349,7 +345,7 @@ struct AlloyTermData *vesaterm_init(void)
 	term->depth = *(alloy_uint8 *)(0x5088);
 	term->frame_buffer = (alloy_uint8 *)((alloy_uint64)(*(alloy_uint32 *)(0x5080)));
 	// TODO : calculate the number 
-	uint64_t page_count = 0;
+	alloy_size page_count = 0;
 	page_count += term->x_res * term->y_res;
 	page_count *= term->depth / 8;
 	page_count += BAREMETAL_PAGE_SIZE;
