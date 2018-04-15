@@ -31,6 +31,5 @@ else
 	$CC $CFLAGS -c host-baremetal.c
 	$LD $LDFLAGS -o alloy alloy.o font.o vesaterm.o host-baremetal.o ../lib/liballoy.a
 	$OBJCOPY -O binary alloy alloy.bin
-	$NASM loader.asm -o loader.bin
 fi
 
