@@ -1,4 +1,4 @@
-%.bin: %.elf
+%.bin: %
 	@echo "OBJCOPY $@"
 	$(OBJCOPY) -O binary $< $@
 

@@ -1,3 +1,4 @@
+-include config.mk
 TOP = $(CURDIR)
 CONFIG ?= default
 include $(TOP)/make/$(CONFIG)-config.mk
