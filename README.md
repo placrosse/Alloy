@@ -20,6 +20,8 @@ cmake --build .
 ./src/alloy
 ```
 
+You should type 'clear' after starting Alloy, to get rid of the current screen content.
+
 ### Dependencies
 
 If you're building it for BareMetal, you'll need FreeType installed.
