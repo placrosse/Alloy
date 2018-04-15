@@ -13,12 +13,44 @@ extern "C"
 {
 #endif
 
+/** @defgroup keys Keys
+ * Defines several keyboard keys
+ * used for input processing.
+ * */
+
+/** The left arrow key.
+ * @ingroup keys
+ * */
+
+#define ALLOY_KEY_LEFT 0x01
+
+/** The right arrow key.
+ * @ingroup keys
+ * */
+
+#define ALLOY_KEY_RIGHT 0x02
+
+/** The up arrow key.
+ * @ingroup keys
+ * */
+
+#define ALLOY_KEY_UP 0x03
+
+/** The down arrow key.
+ * @ingroup keys
+ * */
+
+#define ALLOY_KEY_DOWN 0x04
+
 /** The 'Return' key. Also
  * labelled as 'Enter'.
+ * @ingroup keys
  * */
-#define ALLOY_KEY_RETURN 0x1c
+
+#define ALLOY_KEY_RETURN 0x0a
 
 /** The 'Backspace' key.
+ * @ingroup keys
  * */
 
 #define ALLOY_KEY_BACKSPACE 0x0e
@@ -28,6 +60,7 @@ extern "C"
  * it means the application window
  * was closed. This is only relevent
  * in GUI implementations.
+ * @ingroup keys
  * */
 
 #define ALLOY_KEY_QUIT 0x7f

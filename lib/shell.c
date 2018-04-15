@@ -220,6 +220,75 @@ static int shell_get_char(struct AlloyShell *shell,
 	return 0;
 }
 
+static int shell_backspace(struct AlloyShell *shell)
+{
+	struct AlloyCursorPos cursor_pos;
+
+	int err = alloy_term_get_cursor(shell->term, shell->term_data, &cursor_pos);
+	if (err != 0)
+		return err;
+
+	if (cursor_pos.column == 1)
+		return 0;
+
+	err = alloy_input_backspace(shell->input);
+	if (err != 0)
+		return err;
+
+	cursor_pos.column--;
+
+	err = alloy_term_set_cursor(shell->term, shell->term_data, &cursor_pos);
+	if (err != 0)
+		return err;
+
+	return 0;
+}
+
+static int shell_left(struct AlloyShell *shell)
+{
+	struct AlloyCursorPos cursor_pos;
+
+	int err = alloy_term_get_cursor(shell->term, shell->term_data, &cursor_pos);
+	if (err != 0)
+		return err;
+
+	if (cursor_pos.column == 1)
+		return 0;
+
+	err = alloy_input_left(shell->input);
+	if (err != 0)
+		return err;
+
+	cursor_pos.column--;
+
+	err = alloy_term_set_cursor(shell->term, shell->term_data, &cursor_pos);
+	if (err != 0)
+		return err;
+
+	return 0;
+}
+
+static int shell_right(struct AlloyShell *shell)
+{
+	struct AlloyCursorPos cursor_pos;
+
+	int err = alloy_term_get_cursor(shell->term, shell->term_data, &cursor_pos);
+	if (err != 0)
+		return err;
+
+	err = alloy_input_right(shell->input);
+	if (err != 0)
+		return err;
+
+	cursor_pos.column++;
+
+	err = alloy_term_set_cursor(shell->term, shell->term_data, &cursor_pos);
+	if (err != 0)
+		return err;
+
+	return 0;
+}
+
 static int shell_get_line(struct AlloyShell *shell)
 {
 	for (;;)
@@ -239,14 +308,30 @@ static int shell_get_line(struct AlloyShell *shell)
 			shell_write(shell, "\n", 1);
 			break;
 		}
-
-		if (c == ALLOY_KEY_BACKSPACE)
+		else if (c == ALLOY_KEY_BACKSPACE)
 		{
-			alloy_input_backspace(shell->input);
-			continue;
+			shell_backspace(shell);
 		}
-
-		alloy_input_insert(shell->input, c);
+		else if (c == ALLOY_KEY_LEFT)
+		{
+			shell_left(shell);
+		}
+		else if (c == ALLOY_KEY_RIGHT)
+		{
+			shell_right(shell);
+		}
+		else if (c == ALLOY_KEY_UP)
+		{
+			/* TODO */
+		}
+		else if (c == ALLOY_KEY_DOWN)
+		{
+			/* TODO */
+		}
+		else
+		{
+			alloy_input_insert(shell->input, c);
+		}
 	}
 
 	return 0;
@@ -259,7 +344,7 @@ static struct AlloyDir *shell_opendir(struct AlloyShell *shell,
 }
 
 static struct AlloyDirEnt *shell_readdir(struct AlloyShell *shell,
-                                      struct AlloyDir *dir)
+                                         struct AlloyDir *dir)
 {
 	return alloy_host_readdir(shell->host, shell->host_data, dir);
 }

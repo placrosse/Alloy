@@ -64,13 +64,46 @@ static void xterm_done(struct AlloyTermData *term_data)
 }
 
 static int xterm_get_char(struct AlloyTermData *term_data,
-                             alloy_utf8 *c)
+                          alloy_utf8 *c_ptr)
 {
-	if (fread(c, 1, 1, term_data->in) != 1)
+	alloy_utf8 c = 0;
+
+	if (fread(&c, 1, 1, term_data->in) != 1)
 		return ALLOY_EIO;
 
-	if (*c == '\n')
-		*c = ALLOY_KEY_RETURN;
+	if (c == 0x7f)
+	{
+		c = ALLOY_KEY_BACKSPACE;
+	}
+	else if (c == 0x1b)
+	{
+		if (fread(&c, 1, 1, term_data->in) != 1)
+			return ALLOY_EIO;
+
+		if (c != '[')
+		{
+			/* This is the only control sequence
+			 * that is understood. */
+			return ALLOY_EINVAL;
+		}
+
+		if (fread(&c, 1, 1, term_data->in) != 1)
+			return ALLOY_EIO;
+
+		if (c == 'D')
+			c = ALLOY_KEY_LEFT;
+		else if (c == 'C')
+			c = ALLOY_KEY_RIGHT;
+		else if (c == 'B')
+			c = ALLOY_KEY_DOWN;
+		else if (c == 'A')
+			c = ALLOY_KEY_UP;
+		else
+			return ALLOY_EINVAL;
+	}
+
+	if (c_ptr != ALLOY_NULL)
+		*c_ptr = c;
 
 	return 0;
 }
