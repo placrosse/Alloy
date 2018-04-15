@@ -22,9 +22,13 @@ objfiles += host-linux.o
 endif
 
 ifdef PLATFORM_baremetal
+objfiles += font.o
 objfiles += vesaterm.o
 objfiles += host-baremetal.o
 LDFLAGS += -T alloy.ld
+LDFLAGS += -nostdlib
+targets += alloy.bin
+targets += loader.bin
 endif
 
 targets += alloy
@@ -72,9 +76,20 @@ clean:
 .PHONY: test
 test:
 
+ifdef PLATFORM_baremetal
+
+.PHONY: install
+install: alloy.bin loader.bin
+	cp alloy.bin $(PREFIX)/system
+	cp loader.bin $(PREFIX)/system
+
+else
+
 .PHONY: install
 install: alloy
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	cp alloy $(DESTDIR)$(PREFIX)/bin/alloy
+
+endif
 
 $(V).SILENT:
