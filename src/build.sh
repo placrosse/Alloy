@@ -11,6 +11,7 @@ CC=gcc
 CFLAGS="$CFLAGS -Wall -Wextra -Werror -Wfatal-errors -g"
 CFLAGS="$CFLAGS -fomit-frame-pointer -fno-stack-protector -mno-red-zone"
 CFLAGS="$CFLAGS -I ../include"
+CFLAGS="$CFLAGS -std=gnu99"
 
 NASM=nasm
 

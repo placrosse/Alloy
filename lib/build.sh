@@ -8,6 +8,7 @@ CFLAGS="${CFLAGS} -fno-stack-protector"
 CFLAGS="${CFLAGS} -fomit-frame-pointer"
 CFLAGS="${CFLAGS} -mno-red-zone"
 CFLAGS="${CFLAGS} -I ../include"
+CFLAGS="${CFLAGS} -std=gnu99"
 
 $CC $CFLAGS -c cmd.c
 $CC $CFLAGS -c color.c
