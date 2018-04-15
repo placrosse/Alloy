@@ -2,15 +2,27 @@
 
 Alloy is the middleware/interface to the BareMetal kernel.
 
-### Building
+It's a full-color shell interface that supports active user command highlighting.
 
-Currently, Alloy can only be built by the build scripts of the BareMetal operating system.
+### Building on Linux
 
-While this may change in the future, right now it is not supported.
+Alloy supports building on Linux.
+
+It requires a full-color terminal to display properly.
+
+To build it, enter the directory of the project and run these commands.
+
+```bash
+mkdir build
+cd build
+cmake ..
+cmake --build .
+./src/alloy
+```
 
 ### Dependencies
 
-To build it, you'll need FreeType installed.
+If you're building it for BareMetal, you'll need FreeType installed.
 
 On Ubuntu, you'd install it like this:
 
@@ -18,3 +30,4 @@ On Ubuntu, you'd install it like this:
 sudo apt install libfreetype6-dev
 ```
 
+Otherwise, you just need CMake and a build system that CMake supports, like GNU Make.
