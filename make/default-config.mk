@@ -8,6 +8,7 @@ PLATFORM_$(PLATFORM) = 1
 CROSS_COMPILE ?=
 CFLAGS += -Wall -Wextra -Werror -Wfatal-errors
 CFLAGS += -I $(TOP)/include
+CFLAGS += -std=c99
 CFLAGS += -g
 CC := $(CROSS_COMPILE)gcc
 AR := $(CROSS_COMPILE)ar
