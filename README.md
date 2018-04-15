@@ -20,7 +20,7 @@ cmake --build .
 ./src/alloy
 ```
 
-You should type 'clear' after starting Alloy, to get rid of the current screen content.
+You should type `clear` after starting Alloy, to get rid of the current screen content.
 
 ### Dependencies
 
