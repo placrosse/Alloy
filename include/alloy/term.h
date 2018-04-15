@@ -32,6 +32,7 @@ struct AlloyTerm
 	/** Called to clear the screen and
 	 * reset the cursor position. */
 	int (*clear)(struct AlloyTermData *term_data);
+	/** Gets a character from the terminal input. */
 	int (*get_char)(struct AlloyTermData *term_data,
 	                alloy_utf8 *c);
 	/** Gets the current cursor position. */
