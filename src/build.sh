@@ -16,11 +16,6 @@ CFLAGS="$CFLAGS -std=gnu99"
 OBJCOPY=objcopy
 NASM=nasm
 
-if [ -z ${ALLOY_WITH_BAREMETAL+x} ]; then
-	CFLAGS="$CFLAGS -nostdlib -nostartfiles -nodefaultlibs -nostdinc"
-	LDFLAGS="$LDFLAGS -nostdlib -nostartfiles -nodefaultlibs -T alloy.ld"
-fi
-
 $CC $CFLAGS -c alloy.c
 
 if [ -z ${ALLOY_WITH_BAREMETAL+x} ]; then
@@ -28,13 +23,14 @@ if [ -z ${ALLOY_WITH_BAREMETAL+x} ]; then
 	$CC $CFLAGS -c host-linux.c
 	$LD $LDFLAGS -o alloy xterm.o host-linux.o alloy.o ../lib/liballoy.a
 else
+	CFLAGS="$CFLAGS -nostdinc"
+	CFLAGS="$CFLAGS -DALLOY_WITH_BAREMETAL=1"
+	LDFLAGS="$LDFLAGS -nostdlib -nostartfiles -nodefaultlibs -T alloy.ld"
 	$CC $CFLAGS -c font.c
 	$CC $CFLAGS -c vesaterm.c
 	$CC $CFLAGS -c host-baremetal.c
-	$LD $LDFLAGS -o alloy font.o vesaterm.o host-baremetal.o alloy.o ../lib/liballoy.a
+	$LD $LDFLAGS -o alloy alloy.o font.o vesaterm.o host-baremetal.o ../lib/liballoy.a
 	$OBJCOPY -O binary alloy alloy.bin
 	$NASM loader.asm -o loader.bin
 fi
 
-
-$LD $LDFLAGS alloy.o xterm.o host-linux.o ../lib/liballoy.a -o alloy
