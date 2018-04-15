@@ -4,6 +4,9 @@
 *.obj
 *.elf
 
+# CMake build directory
+/build
+
 # Generated bitmap images
 /src/vesaterm-test.bmp
 
@@ -43,7 +46,8 @@
 /src/alloy
 /utils/alloy-font-generator
 /src/vesaterm-test
-/src/input-test
+/lib/input-test
+/lib/heap-test
 
 # Debug files
 *.dSYM/

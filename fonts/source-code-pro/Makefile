@@ -1,9 +1,16 @@
+TOP ?= $(CURDIR)/../..
+CONFIG ?= default
+include $(TOP)/make/$(CONFIG)-config.mk
+include $(TOP)/make/patterns.mk
+
 source_code_pro_url ?= https://github.com/adobe-fonts/source-code-pro/archive/2.030R-ro/1.050R-it.tar.gz
 source_code_pro_tar ?= source-code-pro-2.030R-ro-1.050R-it.tar.gz
 source_code_pro_dir ?= source-code-pro-2.030R-ro-1.050R-it
 
+targets += $(source_code_pro_dir)
+
 .PHONY: all
-all: $(source_code_pro_dir)
+all: $(targets)
 
 $(source_code_pro_dir): $(source_code_pro_tar)
 	tar --extract --file $<

@@ -1,18 +1,16 @@
-include ../make/patterns.mk
+TOP ?= ..
+CONFIG ?= default
+include $(TOP)/make/$(CONFIG)-config.mk
+include $(TOP)/make/patterns.mk
 
-CC := $(CROSS_COMPILE)gcc
-CFLAGS := $(CFLAGS) -Wall -Wextra -Werror -Wfatal-errors -std=c99
+LDLIBS=$(shell pkg-config --libs freetype2)
 
-LD := $(CROSS_COMPILE)gcc
-LDFLAGS ?=
-LDLIBS ?=
+CFLAGS=$(shell pkg-config --cflags freetype2)
 
 .PHONY: all
 all: alloy-font-generator
 
-alloy-font-generator: LDLIBS=$(shell pkg-config --libs freetype2)
-
-alloy-font-generator.o: CFLAGS=$(shell pkg-config --cflags freetype2)
+alloy-font-generator: alloy-font-generator.o
 
 alloy-font-generator.o: alloy-font-generator.c
 

@@ -1,19 +1,17 @@
-#!/bin/bash
-
-set -u
-set -e
+#!/bin/sh
 
 cd fonts/source-code-pro
-./build.sh
-cd ../..
+./clean.sh
+cd ..
 
 cd utils
-./build.sh
+./clean.sh
 cd ..
 
 cd lib
+./clean.sh
 cd ..
 
 cd src
-#./build.sh
+./clean.sh
 cd ..
