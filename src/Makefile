@@ -28,18 +28,12 @@ objfiles += host-baremetal.o
 LDFLAGS += -T alloy.ld
 LDFLAGS += -nostdlib
 targets += alloy.bin
-targets += loader.bin
 endif
 
 targets += alloy
 
 .PHONY: all
 all: $(targets)
-
-loader.bin: loader.asm
-	$(NASM) $< -o $@
-
-loader.elf: loader.o
 
 alloy: alloy.o $(objfiles) liballoy.a -lbmfs
 
@@ -71,7 +65,6 @@ clean:
 	$(RM) font.c
 	$(RM) alloy
 	$(RM) *.o
-	$(RM) loader.bin
 
 .PHONY: test
 test:
@@ -79,9 +72,8 @@ test:
 ifdef PLATFORM_baremetal
 
 .PHONY: install
-install: alloy.bin loader.bin
+install: alloy.bin
 	cp alloy.bin $(PREFIX)/system
-	cp loader.bin $(PREFIX)/system
 
 else
 
