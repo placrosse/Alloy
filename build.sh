@@ -11,6 +11,9 @@ cd utils
 ./build.sh
 cd ..
 
+cd lib
+cd ..
+
 cd src
-./build.sh
+#./build.sh
 cd ..

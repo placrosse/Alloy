@@ -17,6 +17,8 @@ libfiles += color.o
 libfiles += heap.o
 libfiles += host.o
 libfiles += input.o
+libfiles += scanner.o
+libfiles += scheme.o
 libfiles += shell.o
 libfiles += term.o
 
@@ -42,6 +44,10 @@ input.o: input.c input.h
 input-test.o: input-test.c input.h
 
 input-test: input-test.o liballoy.a
+
+scanner.o: scanner.c scanner.h types.h errno.h
+
+scheme.o: scheme.c scheme.h color.h types.h
 
 shell.o: shell.c shell.h term.h input.h
 

@@ -24,6 +24,7 @@ endif
 ifdef PLATFORM_baremetal
 objfiles += vesaterm.o
 objfiles += host-baremetal.o
+LDFLAGS += -T alloy.ld
 endif
 
 targets += alloy
@@ -38,11 +39,7 @@ loader.elf: loader.o
 
 alloy: alloy.o $(objfiles) liballoy.a -lbmfs
 
-alloy.bin: alloy.elf
-
-alloy.elf: alloy.o liballoy.a syscall-hooks.o -lbmfs -lc
-
-alloy.elf: LDFLAGS+=-T alloy.ld
+alloy.bin: alloy
 
 alloy.o: alloy.c term.h shell.h input.h errno.h types.h
 
