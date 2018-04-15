@@ -13,6 +13,7 @@ CFLAGS="$CFLAGS -fomit-frame-pointer -fno-stack-protector -mno-red-zone"
 CFLAGS="$CFLAGS -I ../include"
 CFLAGS="$CFLAGS -std=gnu99"
 
+OBJCOPY=objcopy
 NASM=nasm
 
 if [ -z ${ALLOY_WITH_BAREMETAL+x} ]; then
