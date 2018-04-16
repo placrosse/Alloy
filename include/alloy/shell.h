@@ -48,6 +48,8 @@ struct AlloyShell
 	alloy_bool heap_ready;
 	/** The color scheme for the terminal interface. */
 	struct AlloyScheme scheme;
+	/** The variable table for the shell.  */
+	struct AlloyVarTable *var_table;
 };
 
 void alloy_shell_init(struct AlloyShell *shell);

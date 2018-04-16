@@ -8,6 +8,7 @@
 #include <alloy/scanner.h>
 #include <alloy/term.h>
 #include <alloy/types.h>
+#include <alloy/var.h>
 #include <alloy/version.h>
 
 static int shell_write(struct AlloyShell *shell,
@@ -114,6 +115,24 @@ static int init_input(struct AlloyShell *shell)
 	alloy_input_init(shell->input);
 
 	alloy_input_set_heap(shell->input, &shell->heap);
+
+	return 0;
+}
+
+static int init_var_table(struct AlloyShell *shell)
+{
+	if (shell->var_table != ALLOY_NULL)
+		return 0;
+
+	int err = init_heap(shell);
+	if (err != 0)
+		return err;
+
+	shell->var_table = alloy_heap_malloc(&shell->heap, sizeof(struct AlloyVarTable));
+	if (shell->var_table == ALLOY_NULL)
+		return ALLOY_ENOMEM;
+
+	alloy_var_table_init(shell->var_table, &shell->heap);
 
 	return 0;
 }
@@ -350,9 +369,88 @@ static struct AlloyDirEnt *shell_readdir(struct AlloyShell *shell,
 }
 
 static void shell_closedir(struct AlloyShell *shell,
-                                       struct AlloyDir *dir)
+                           struct AlloyDir *dir)
 {
 	alloy_host_closedir(shell->host, shell->host_data, dir);
+}
+
+static int shell_define(struct AlloyShell *shell,
+                        const struct AlloyToken *key_token,
+                        const struct AlloyToken *value_token)
+{
+	char *key = alloy_heap_malloc(&shell->heap, key_token->buf_len + 1);
+	if (key == ALLOY_NULL)
+		return ALLOY_ENOMEM;
+
+	for (alloy_size i = 0; i < key_token->buf_len; i++)
+		key[i] = key_token->buf[i];
+
+	key[key_token->buf_len] = 0;
+
+	char *value = ALLOY_NULL;
+
+	if (value_token != ALLOY_NULL)
+	{
+		value = alloy_heap_malloc(&shell->heap, value_token->buf_len + 1);
+		if (value == ALLOY_NULL)
+		{
+			alloy_heap_free(&shell->heap, key);
+			return ALLOY_ENOMEM;
+		}
+
+		for (alloy_size i = 0; i < value_token->buf_len; i++)
+			value[i] = value_token->buf[i];
+
+		value[value_token->buf_len] = 0;
+	}
+
+	int err = alloy_var_table_define(shell->var_table, key, value);
+
+	alloy_heap_free(&shell->heap, key);
+	alloy_heap_free(&shell->heap, value);
+
+	if (err != 0)
+		return err;
+
+	return 0;
+}
+
+static int shell_try_assignment(struct AlloyShell *shell)
+{
+	int err = init_var_table(shell);
+	if (err != 0)
+		return err;
+
+	struct AlloyScanner scanner;
+
+	alloy_scanner_init(&scanner);
+
+	alloy_scanner_set_buf(&scanner, shell->input->buf, shell->input->buf_len);
+
+	alloy_scanner_ignore_space(&scanner);
+
+	struct AlloyToken *key = alloy_scanner_next(&scanner);
+	if (key == ALLOY_NULL)
+		return ALLOY_EINVAL;
+
+	struct AlloyToken *equal = alloy_scanner_next(&scanner);
+	if ((equal == ALLOY_NULL)
+	 || (equal->buf_len != 1)
+	 || (equal->buf[0] != '='))
+		return ALLOY_EINVAL;
+
+	struct AlloyToken *value = alloy_scanner_next(&scanner);
+
+	err = shell_define(shell, key, value);
+	if (err != 0)
+	{
+		alloy_input_clear(shell->input);
+		return err;
+	}
+
+	alloy_input_clear(shell->input);
+
+	return 0;
 }
 
 static int cmd_version(struct AlloyShell *shell)
@@ -382,11 +480,12 @@ static int cmd_help_print_cmd(struct AlloyShell *shell,
 static int cmd_help(struct AlloyShell *shell)
 {
 	shell_write_z(shell, "Commands:\n");
-	cmd_help_print_cmd(shell, "help   ", "Get help with a command.");
-	cmd_help_print_cmd(shell, "exit   ", "Exit the shell.");
-	cmd_help_print_cmd(shell, "version", "Print this version of Alloy.");
-	cmd_help_print_cmd(shell, "dir    ", "List directory contents.");
 	cmd_help_print_cmd(shell, "clear  ", "Clear the screen.");
+	cmd_help_print_cmd(shell, "dir    ", "List directory contents.");
+	cmd_help_print_cmd(shell, "echo   ", "Echo content to the standard output.");
+	cmd_help_print_cmd(shell, "exit   ", "Exit the shell.");
+	cmd_help_print_cmd(shell, "help   ", "Get help with a command.");
+	cmd_help_print_cmd(shell, "version", "Print this version of Alloy.");
 	return 0;
 }
 
@@ -548,6 +647,7 @@ void alloy_shell_init(struct AlloyShell *shell)
 	shell->term_data = ALLOY_NULL;
 	shell->quit_flag = ALLOY_FALSE;
 	shell->input = ALLOY_NULL;
+	shell->var_table = ALLOY_NULL;
 	alloy_scheme_init(&shell->scheme);
 }
 
@@ -567,6 +667,13 @@ void alloy_shell_done(struct AlloyShell *shell)
 		shell->term_data = ALLOY_NULL;
 	}
 
+	if (shell->var_table != ALLOY_NULL)
+	{
+		alloy_var_table_done(shell->var_table);
+		alloy_heap_free(&shell->heap, shell->var_table);
+		shell->var_table = ALLOY_NULL;
+	}
+
 	if (shell->host != ALLOY_NULL)
 	{
 		alloy_host_done(shell->host, shell->host_data);
@@ -577,9 +684,29 @@ void alloy_shell_done(struct AlloyShell *shell)
 
 int alloy_shell_run(struct AlloyShell *shell)
 {
+	/* Ensure that the terminal is initialized */
+	int err = init_term(shell);
+	if (err != 0)
+		return err;
+
+	/* Ensure that the input is initialized. */
+	err = init_input(shell);
+	if (err != 0)
+		return err;
+
+	/* Clear the terminal to ensure that the
+	 * current theme presents itself. */
+	err = alloy_term_clear(shell->term, shell->term_data);
+	if (err != 0)
+		return err;
+
 	while (!shell->quit_flag)
 	{
-		int err = alloy_shell_run_once(shell);
+		/* Ensure that the input buffer
+		 * does not contain anything in it. */
+		alloy_input_clear(shell->input);
+
+		err = alloy_shell_run_once(shell);
 		if (err != 0)
 			return err;
 	}
@@ -610,11 +737,15 @@ int alloy_shell_run_once(struct AlloyShell *shell)
 	shell_set_foreground(shell, &shell->scheme.normal_foreground);
 	shell_set_background(shell, &shell->scheme.normal_background);
 
-	err = shell_run_cmd(shell);
+	err = shell_try_assignment(shell);
 	if (err != 0)
 	{
-		shell_write_z(shell, "Failed to run command.\n");
-		return err;
+		err = shell_run_cmd(shell);
+		if (err != 0)
+		{
+			shell_write_z(shell, "Failed to run command.\n");
+			return err;
+		}
 	}
 
 	return 0;
