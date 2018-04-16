@@ -21,8 +21,8 @@ static int shell_write(struct AlloyShell *shell,
 	return 0;
 }
 
-static int shell_write_asciiz(struct AlloyShell *shell,
-                              const char *str)
+static int shell_write_z(struct AlloyShell *shell,
+                         const char *str)
 {
 	int err = alloy_term_write_asciiz(shell->term, shell->term_data, str);
 	if (err != 0)
@@ -142,7 +142,7 @@ static int shell_prompt(struct AlloyShell *shell)
 {
 	alloy_term_clear_line(shell->term, shell->term_data);
 
-	shell_write_asciiz(shell, "> ");
+	shell_write_z(shell, "> ");
 
 	struct AlloyScanner scanner;
 
@@ -357,8 +357,8 @@ static void shell_closedir(struct AlloyShell *shell,
 
 static int cmd_version(struct AlloyShell *shell)
 {
-	shell_write_asciiz(shell, ALLOY_VERSION_STRING);
-	shell_write_asciiz(shell, "\n");
+	shell_write_z(shell, ALLOY_VERSION_STRING);
+	shell_write_z(shell, "\n");
 	return 0;
 }
 
@@ -366,22 +366,22 @@ static int cmd_help_print_cmd(struct AlloyShell *shell,
                               const char *name,
                               const char *desc)
 {
-	shell_write_asciiz(shell, "  ");
+	shell_write_z(shell, "  ");
 
 	shell_set_foreground(shell, &shell->scheme.cmd_builtin);
-	shell_write_asciiz(shell, name);
+	shell_write_z(shell, name);
 	shell_set_foreground(shell, &shell->scheme.normal_foreground);
 
-	shell_write_asciiz(shell, " : ");
-	shell_write_asciiz(shell, desc);
-	shell_write_asciiz(shell, "\n");
+	shell_write_z(shell, " : ");
+	shell_write_z(shell, desc);
+	shell_write_z(shell, "\n");
 
 	return 0;
 }
 
 static int cmd_help(struct AlloyShell *shell)
 {
-	shell_write_asciiz(shell, "Commands:\n");
+	shell_write_z(shell, "Commands:\n");
 	cmd_help_print_cmd(shell, "help   ", "Get help with a command.");
 	cmd_help_print_cmd(shell, "exit   ", "Exit the shell.");
 	cmd_help_print_cmd(shell, "version", "Print this version of Alloy.");
@@ -413,15 +413,15 @@ static int cmd_dir(struct AlloyShell *shell,
 
 	if (dir == ALLOY_NULL)
 	{
-		shell_write_asciiz(shell, "Failed to open ");
+		shell_write_z(shell, "Failed to open ");
 
 		shell_set_foreground(shell, &shell->scheme.string_literal);
-		shell_write_asciiz(shell, "'");
-		shell_write_asciiz(shell, path);
-		shell_write_asciiz(shell, "'");
+		shell_write_z(shell, "'");
+		shell_write_z(shell, path);
+		shell_write_z(shell, "'");
 		shell_set_foreground(shell, &shell->scheme.normal_foreground);
 
-		shell_write_asciiz(shell, "\n");
+		shell_write_z(shell, "\n");
 
 		return 0;
 	}
@@ -436,19 +436,30 @@ static int cmd_dir(struct AlloyShell *shell,
 			continue;
 
 		if (ent->type == ALLOY_DIR_ENT_FILE)
-			shell_write_asciiz(shell, "  file : ");
+			shell_write_z(shell, "  file : ");
 		else
-			shell_write_asciiz(shell, "  dir  : ");
+			shell_write_z(shell, "  dir  : ");
 
 		shell_set_foreground(shell, &shell->scheme.string_literal);
-		shell_write_asciiz(shell, "\"");
-		shell_write_asciiz(shell, ent->name);
-		shell_write_asciiz(shell, "\"");
+		shell_write_z(shell, "\"");
+		shell_write_z(shell, ent->name);
+		shell_write_z(shell, "\"");
 		shell_set_foreground(shell, &shell->scheme.normal_foreground);
-		shell_write_asciiz(shell, "\n");
+		shell_write_z(shell, "\n");
 	}
 
 	shell_closedir(shell, dir);
+
+	return 0;
+}
+
+static int cmd_echo(struct AlloyShell *shell,
+                    struct AlloyCmd *cmd)
+{
+	for (alloy_size i = 1; i < cmd->argc; i++)
+		shell_write_z(shell, cmd->argv[i]);
+
+	shell_write_z(shell, "\n");
 
 	return 0;
 }
@@ -465,15 +476,15 @@ static int cmd_unknown(struct AlloyShell *shell,
 		return 0;
 	}
 
-	shell_write_asciiz(shell, "Unknown command: ");
+	shell_write_z(shell, "Unknown command: ");
 
 	shell_set_foreground(shell, &shell->scheme.string_literal);
-	shell_write_asciiz(shell, "'");
-	shell_write_asciiz(shell, cmd->argv[0]);
-	shell_write_asciiz(shell, "'");
+	shell_write_z(shell, "'");
+	shell_write_z(shell, cmd->argv[0]);
+	shell_write_z(shell, "'");
 	shell_set_foreground(shell, &shell->scheme.normal_foreground);
 
-	shell_write_asciiz(shell, ".\n");
+	shell_write_z(shell, ".\n");
 
 	return 0;
 }
@@ -508,6 +519,9 @@ static int shell_run_cmd(struct AlloyShell *shell)
 		break;
 	case ALLOY_CMD_EXIT:
 		shell->quit_flag = ALLOY_TRUE;
+		break;
+	case ALLOY_CMD_ECHO:
+		err = cmd_echo(shell, &cmd);
 		break;
 	case ALLOY_CMD_VERSION:
 		err = cmd_version(shell);
@@ -582,14 +596,14 @@ int alloy_shell_run_once(struct AlloyShell *shell)
 	err = init_input(shell);
 	if (err != 0)
 	{
-		shell_write_asciiz(shell, "Failed to initialize input.\n");
+		shell_write_z(shell, "Failed to initialize input.\n");
 		return err;
 	}
 
 	err = shell_get_line(shell);
 	if (err != 0)
 	{
-		shell_write_asciiz(shell, "Failed to read input line.\n");
+		shell_write_z(shell, "Failed to read input line.\n");
 		return err;
 	}
 
@@ -599,7 +613,7 @@ int alloy_shell_run_once(struct AlloyShell *shell)
 	err = shell_run_cmd(shell);
 	if (err != 0)
 	{
-		shell_write_asciiz(shell, "Failed to run command.\n");
+		shell_write_z(shell, "Failed to run command.\n");
 		return err;
 	}
 
@@ -647,7 +661,7 @@ void alloy_shell_set_term(struct AlloyShell *shell,
 	shell->term_data = ALLOY_NULL;
 }
 
-int alloy_shell_write_asciiz(struct AlloyShell *shell,
+int alloy_shell_write_z(struct AlloyShell *shell,
                              const char *str)
 {
 	int err = init_term(shell);

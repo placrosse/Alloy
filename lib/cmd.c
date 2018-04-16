@@ -98,6 +98,13 @@ enum AlloyCmdID alloy_cmd_id_parse(const char *cmd, alloy_size cmd_len)
 
 	if ((cmd_len == 4)
 	 && (cmd[0] == 'e')
+	 && (cmd[1] == 'c')
+	 && (cmd[2] == 'h')
+	 && (cmd[3] == 'o'))
+		return ALLOY_CMD_ECHO;
+
+	if ((cmd_len == 4)
+	 && (cmd[0] == 'e')
 	 && (cmd[1] == 'x')
 	 && (cmd[2] == 'i')
 	 && (cmd[3] == 't'))

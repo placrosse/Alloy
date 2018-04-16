@@ -32,6 +32,8 @@ enum AlloyCmdID
 	ALLOY_CMD_CLEAR,
 	/** List directory contents. */
 	ALLOY_CMD_DIR,
+	/** Writes to the standard output. */
+	ALLOY_CMD_ECHO,
 	/** Exits the shell. */
 	ALLOY_CMD_EXIT,
 	/** Prints help contents. */
