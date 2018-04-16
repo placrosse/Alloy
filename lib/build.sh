@@ -18,9 +18,11 @@ $CC $CFLAGS -c input.c
 $CC $CFLAGS -c scanner.c
 $CC $CFLAGS -c scheme.c
 $CC $CFLAGS -c shell.c
+$CC $CFLAGS -c string.c
 $CC $CFLAGS -c term.c
+$CC $CFLAGS -c var.c
 
 AR=ar
 ARFLAGS=rcs
 
-$AR $ARFLAGS liballoy.a cmd.o color.o heap.o host.o input.o scanner.o scheme.o shell.o term.o
+$AR $ARFLAGS liballoy.a cmd.o color.o heap.o host.o input.o scanner.o scheme.o shell.o string.o term.o var.o
