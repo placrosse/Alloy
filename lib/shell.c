@@ -6,6 +6,7 @@
 #include <alloy/host.h>
 #include <alloy/input.h>
 #include <alloy/scanner.h>
+#include <alloy/string.h>
 #include <alloy/term.h>
 #include <alloy/types.h>
 #include <alloy/var.h>
@@ -135,6 +136,124 @@ static int init_var_table(struct AlloyShell *shell)
 	alloy_var_table_init(shell->var_table, &shell->heap);
 
 	return 0;
+}
+
+static char *shell_append(struct AlloyShell *shell,
+                          char *begin,
+                          const char *end,
+                          alloy_size end_len)
+{
+	alloy_size begin_len = 0;
+
+	if (begin != ALLOY_NULL)
+		begin_len = alloy_strlen(begin);
+
+	alloy_size size = 0;
+	size += begin_len;
+	size += end_len;
+
+	char *tmp = alloy_heap_realloc(&shell->heap, begin, size + 1);
+	if (tmp == ALLOY_NULL)
+		return ALLOY_NULL;
+
+	for (alloy_size i = 0; i < end_len; i++)
+		tmp[begin_len + i] = end[i];
+
+	tmp[size] = 0;
+
+	return tmp;
+}
+
+static char *shell_append_tok(struct AlloyShell *shell,
+                              char *begin,
+                              const struct AlloyToken *token)
+{
+	const char *end = token->buf;
+
+	alloy_size end_len = token->buf_len;
+
+	return shell_append(shell, begin, end, end_len);
+}
+
+static char *shell_append_var(struct AlloyShell *shell,
+                              char *in,
+                              const struct AlloyToken *token)
+{
+	const char *key = token->buf;
+
+	alloy_size key_len = token->buf_len;
+
+	const char *value = alloy_var_table_get_s(shell->var_table, key, key_len);
+	if (value == ALLOY_NULL)
+		return in;
+
+	return shell_append(shell, in, value, alloy_strlen(value));
+}
+
+static char *shell_expand(struct AlloyShell *shell,
+                          const char *in,
+                          alloy_size in_len)
+{
+	char *out = ALLOY_NULL;
+
+	struct AlloyScanner scanner;
+
+	alloy_scanner_init(&scanner);
+
+	alloy_scanner_set_buf(&scanner, in, in_len);
+
+	while (!alloy_scanner_eof(&scanner))
+	{
+		struct AlloyToken *token = alloy_scanner_next(&scanner);
+		if (token == ALLOY_NULL)
+		{
+			break;
+		}
+		else if ((token->id == ALLOY_TOKEN_SYMBOL)
+		      && (token->buf_len == 1)
+		      && (token->buf[0] == '$'))
+		{
+			token = alloy_scanner_next(&scanner);
+			if (token == ALLOY_NULL)
+			{
+				/* TODO : ERROR */
+				alloy_heap_free(&shell->heap, out);
+				return ALLOY_NULL;
+			}
+			else if (token->id == ALLOY_TOKEN_IDENTIFIER)
+			{
+				char *tmp = shell_append_var(shell, out, token);
+				if (tmp == ALLOY_NULL)
+				{
+					alloy_heap_free(&shell->heap, out);
+					return ALLOY_NULL;
+				}
+				out = tmp;
+			}
+			else
+			{
+				char *tmp = shell_append_tok(shell, out, token);
+				if (tmp == ALLOY_NULL)
+				{
+					alloy_heap_free(&shell->heap, out);
+					return ALLOY_NULL;
+				}
+				out = tmp;
+			}
+		}
+		else
+		{
+			char *tmp = shell_append_tok(shell, out, token);
+			if (tmp == ALLOY_NULL)
+			{
+				alloy_heap_free(&shell->heap, out);
+				return ALLOY_NULL;
+			}
+			out = tmp;
+		}
+	}
+
+	return out;
 }
 
 static int shell_set_foreground(struct AlloyShell *shell,
@@ -429,19 +548,35 @@ static int shell_try_assignment(struct AlloyShell *shell)
 
 	alloy_scanner_ignore_space(&scanner);
 
-	struct AlloyToken *key = alloy_scanner_next(&scanner);
-	if (key == ALLOY_NULL)
+	struct AlloyToken *tok = alloy_scanner_next(&scanner);
+	if (tok == ALLOY_NULL)
 		return ALLOY_EINVAL;
 
-	struct AlloyToken *equal = alloy_scanner_next(&scanner);
-	if ((equal == ALLOY_NULL)
-	 || (equal->buf_len != 1)
-	 || (equal->buf[0] != '='))
+	struct AlloyToken name;
+	name.id = tok->id;
+	name.buf = tok->buf;
+	name.buf_len = tok->buf_len;
+
+	tok = alloy_scanner_next(&scanner);
+	if ((tok == ALLOY_NULL)
+	 || (tok->buf_len != 1)
+	 || (tok->buf[0] != '='))
 		return ALLOY_EINVAL;
 
-	struct AlloyToken *value = alloy_scanner_next(&scanner);
+	struct AlloyToken value;
+	value.id = ALLOY_TOKEN_IDENTIFIER;
+	value.buf = ALLOY_NULL;
+	value.buf_len = 0;
 
-	err = shell_define(shell, key, value);
+	tok = alloy_scanner_next(&scanner);
+	if (tok != ALLOY_NULL)
+	{
+		value.id = tok->id;
+		value.buf = tok->buf;
+		value.buf_len = tok->buf_len;
+	}
+
+	err = shell_define(shell, &name, &value);
 	if (err != 0)
 	{
 		alloy_input_clear(shell->input);
@@ -556,7 +691,12 @@ static int cmd_echo(struct AlloyShell *shell,
                     struct AlloyCmd *cmd)
 {
 	for (alloy_size i = 1; i < cmd->argc; i++)
+	{
 		shell_write_z(shell, cmd->argv[i]);
+
+		if ((i + 1) < cmd->argc)
+			shell_write_z(shell, " ");
+	}
 
 	shell_write_z(shell, "\n");
 
@@ -591,18 +731,26 @@ static int cmd_unknown(struct AlloyShell *shell,
 static int shell_run_cmd(struct AlloyShell *shell)
 {
 	struct AlloyCmd cmd;
-
 	alloy_cmd_init(&cmd);
-
 	alloy_cmd_set_heap(&cmd, &shell->heap);
 
-	int err = alloy_cmd_parse(&cmd, shell->input->buf);
+	char *in = shell_expand(shell, shell->input->buf, shell->input->buf_len);
+	if (in == ALLOY_NULL)
+	{
+		alloy_cmd_done(&cmd);
+		return ALLOY_ENOMEM;
+	}
+
+	int err = alloy_cmd_parse(&cmd, in);
 	if (err != 0)
 	{
+		alloy_heap_free(&shell->heap, in);
 		alloy_cmd_done(&cmd);
 		alloy_input_clear(shell->input);
 		return err;
 	}
+
+	alloy_heap_free(&shell->heap, in);
 
 	alloy_input_clear(shell->input);
 

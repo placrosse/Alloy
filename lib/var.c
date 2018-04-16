@@ -125,3 +125,27 @@ const char *alloy_var_table_get(const struct AlloyVarTable *var_table,
 	else
 		return var->value;
 }
+
+const char *alloy_var_table_get_s(const struct AlloyVarTable *var_table,
+                                  const char *name,
+                                  alloy_size name_size)
+{
+	for (alloy_size i = 0; i < var_table->var_count; i++)
+	{
+		const struct AlloyVar *var = &var_table->var_array[i];
+
+		alloy_size j = 0;
+
+		while ((j < name_size) && (var->name[j] != 0))
+		{
+			if (name[j] != var->name[j])
+					break;
+			j++;
+		}
+
+		if ((j == name_size) && (var->name[j] == 0))
+			return var->value;
+	}
+
+	return ALLOY_NULL;
+}

@@ -100,6 +100,24 @@ struct AlloyVar *alloy_var_table_find(const struct AlloyVarTable *var_table,
 const char *alloy_var_table_get(const struct AlloyVarTable *var_table,
                                 const char *name);
 
+/** Gets the value of an existing variable.
+ * The size of the variable name must be passed
+ * to this function. To pass a null-terminated
+ * string, use @ref alloy_var_table_get instead.
+ * @param var_table An initialized variable table.
+ * @param name The name of the variable.
+ * This string does not have to be null-terminated.
+ * @param name_size The number of characters in
+ * the variable name.
+ * @returns The value of the variable, if it exists.
+ * If it does not exist, then @ref ALLOY_NULL is returned.
+ * @ingroup var-api
+ * */
+
+const char *alloy_var_table_get_s(const struct AlloyVarTable *var_table,
+                                  const char *name,
+                                  alloy_size name_size);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
