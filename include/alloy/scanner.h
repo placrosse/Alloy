@@ -90,6 +90,10 @@ struct AlloyScanner
 	/** The current line of the scanner
 	 * within the source code. */
 	alloy_size line;
+	/** If set to @ref ALLOY_TRUE, then space
+	 * tokens will not be returned by the
+	 * function, @ref alloy_scanner_next. */
+	alloy_bool ignore_space;
 };
 
 /** Initializes the lexical scanner structure.
@@ -100,6 +104,15 @@ struct AlloyScanner
  * */
 
 void alloy_scanner_init(struct AlloyScanner *scanner);
+
+/** Tells the scanner to not return space tokens.
+ * This can be useful for parsing, since spaces are
+ * generally not regarded by the parser.
+ * @param scanner An initialized parser structure.
+ * @ingroup scanner-api
+ * */
+
+void alloy_scanner_ignore_space(struct AlloyScanner *scanner);
 
 /** Sets the string buffer to be scanned.
  * @param scanner An initialized scanner structure.

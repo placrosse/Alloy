@@ -305,6 +305,12 @@ void alloy_scanner_init(struct AlloyScanner *scanner)
 	scanner->buf_len = 0;
 	scanner->line = 1;
 	scanner->column = 1;
+	scanner->ignore_space = ALLOY_FALSE;
+}
+
+void alloy_scanner_ignore_space(struct AlloyScanner *scanner)
+{
+	scanner->ignore_space = ALLOY_TRUE;
 }
 
 void alloy_scanner_begin(struct AlloyScanner *scanner)
@@ -359,7 +365,12 @@ struct AlloyToken *alloy_scanner_next(struct AlloyScanner *scanner)
 
 	token = space(scanner);
 	if (token != ALLOY_NULL)
-		return token;
+	{
+		if (scanner->ignore_space)
+			return alloy_scanner_next(scanner);
+		else
+			return token;
+	}
 
 	token = symbol(scanner);
 	if (token != ALLOY_NULL)
