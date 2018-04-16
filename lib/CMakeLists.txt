@@ -15,7 +15,9 @@ add_library("alloy"
 	"scanner.c"
 	"scheme.c"
 	"shell.c"
-	"term.c")
+	"string.c"
+	"term.c"
+	"var.c")
 
 function(ADD_ALLOY_TEST TEST)
 	add_executable(${TEST} ${ARGN})
@@ -30,5 +32,7 @@ add_alloy_test("heap-test" "heap-test.c")
 add_alloy_test("input-test" "input-test.c")
 
 add_alloy_test("scanner-test" "scanner-test.c")
+
+add_alloy_test("var-test" "var-test.c")
 
 enable_testing()
