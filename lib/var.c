@@ -29,12 +29,15 @@ static int new_var(struct AlloyVarTable *var_table,
 	var_table->var_array = var_array;
 
 	struct AlloyVar *new_var = &var_array[var_count - 1];
-	new_var->name = alloy_strdup(var_table->heap, name);
-	new_var->value = alloy_strdup(var_table->heap, value);
 
-	if ((new_var->name == ALLOY_NULL)
-	 || (new_var->value == ALLOY_NULL))
-	{
+	new_var->name = alloy_strdup(var_table->heap, name);
+
+	if (value != ALLOY_NULL)
+		new_var->value = alloy_strdup(var_table->heap, value);
+	else
+		new_var->value = ALLOY_NULL;
+
+	if (new_var->name == ALLOY_NULL) {
 		alloy_heap_free(var_table->heap, new_var->name);
 		alloy_heap_free(var_table->heap, new_var->value);
 		return ALLOY_ENOMEM;
@@ -80,6 +83,11 @@ int alloy_var_table_define(struct AlloyVarTable *var_table,
 	struct AlloyVar *var = alloy_var_table_find(var_table, name);
 	if (var != ALLOY_NULL)
 	{
+		if (value == ALLOY_NULL)
+			return 0;
+
+		alloy_heap_free(var_table->heap, var->value);
+
 		var->value = alloy_strdup(var_table->heap, value);
 		if (var->value == ALLOY_NULL)
 			return ALLOY_ENOMEM;
