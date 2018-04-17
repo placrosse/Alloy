@@ -429,6 +429,8 @@ static int shell_right(struct AlloyShell *shell)
 
 static int shell_get_line(struct AlloyShell *shell)
 {
+	alloy_input_clear(shell->input);
+
 	for (;;)
 	{
 		int err = shell_prompt(shell);
