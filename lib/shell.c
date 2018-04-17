@@ -1,3 +1,10 @@
+/* ===============================================================
+ * Alloy - A platform-independent terminal and shell program.
+ * Copyright (C) 2017 - 2018 Return Infinity
+ * See LICENSE for license information.
+ * ===============================================================
+ */
+
 #include <alloy/shell.h>
 
 #include <alloy/cmd.h>
@@ -358,85 +365,30 @@ static int shell_get_char(struct AlloyShell *shell,
 	return 0;
 }
 
-static int shell_backspace(struct AlloyShell *shell)
-{
-	struct AlloyCursorPos cursor_pos;
-
-	int err = alloy_term_get_cursor(shell->term, shell->term_data, &cursor_pos);
-	if (err != 0)
-		return err;
-
-	if (cursor_pos.column == 1)
-		return 0;
-
-	err = alloy_input_backspace(shell->input);
-	if (err != 0)
-		return err;
-
-	cursor_pos.column--;
-
-	err = alloy_term_set_cursor(shell->term, shell->term_data, &cursor_pos);
-	if (err != 0)
-		return err;
-
-	return 0;
-}
-
-static int shell_left(struct AlloyShell *shell)
-{
-	struct AlloyCursorPos cursor_pos;
-
-	int err = alloy_term_get_cursor(shell->term, shell->term_data, &cursor_pos);
-	if (err != 0)
-		return err;
-
-	if (cursor_pos.column == 1)
-		return 0;
-
-	err = alloy_input_left(shell->input);
-	if (err != 0)
-		return err;
-
-	cursor_pos.column--;
-
-	err = alloy_term_set_cursor(shell->term, shell->term_data, &cursor_pos);
-	if (err != 0)
-		return err;
-
-	return 0;
-}
-
-static int shell_right(struct AlloyShell *shell)
-{
-	struct AlloyCursorPos cursor_pos;
-
-	int err = alloy_term_get_cursor(shell->term, shell->term_data, &cursor_pos);
-	if (err != 0)
-		return err;
-
-	err = alloy_input_right(shell->input);
-	if (err != 0)
-		return err;
-
-	cursor_pos.column++;
-
-	err = alloy_term_set_cursor(shell->term, shell->term_data, &cursor_pos);
-	if (err != 0)
-		return err;
-
-	return 0;
-}
-
 static int shell_get_line(struct AlloyShell *shell)
 {
 	alloy_input_clear(shell->input);
 
+	alloy_size offset = 0;
+	alloy_size column = 0;
+
+	struct AlloyCursorPos pos;
+
+	int err = shell_prompt(shell);
+	if (err != 0)
+		return err;
+
+	err = alloy_term_get_cursor(shell->term, shell->term_data, &pos);
+	if (err != 0)
+		return err;
+
+	column = pos.column;
+
+	if (column > 4)
+		column = pos.column;
+
 	for (;;)
 	{
-		int err = shell_prompt(shell);
-		if (err != 0)
-			return err;
-
 		alloy_utf8 c = 0;
 
 		err = shell_get_char(shell, &c);
@@ -450,15 +402,24 @@ static int shell_get_line(struct AlloyShell *shell)
 		}
 		else if (c == ALLOY_KEY_BACKSPACE)
 		{
-			shell_backspace(shell);
+			if (offset == 0)
+				continue;
+
+			alloy_input_backspace(shell->input);
+			offset--;
 		}
 		else if (c == ALLOY_KEY_LEFT)
 		{
-			shell_left(shell);
+			 if (offset == 0)
+				continue;
+
+			alloy_input_left(shell->input);
+			offset--;
 		}
 		else if (c == ALLOY_KEY_RIGHT)
 		{
-			shell_right(shell);
+			alloy_input_right(shell->input);
+			offset++;
 		}
 		else if (c == ALLOY_KEY_UP)
 		{
@@ -471,7 +432,18 @@ static int shell_get_line(struct AlloyShell *shell)
 		else
 		{
 			alloy_input_insert(shell->input, c);
+			offset++;
 		}
+
+		err = shell_prompt(shell);
+		if (err != 0)
+			return err;
+
+		pos.column = column + offset;
+
+		err = alloy_term_set_cursor(shell->term, shell->term_data, &pos);
+		if (err != 0)
+			return err;
 	}
 
 	return 0;
