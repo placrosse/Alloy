@@ -7,7 +7,10 @@
 
 #include "host.h"
 
+#include <alloy/errno.h>
+
 #include <unistd.h>
+#include <fcntl.h>
 #include <dirent.h>
 #include <sys/mman.h>
 
@@ -26,6 +29,11 @@ struct AlloyDir
 		struct dirent *ent;
 	} host;
 	struct AlloyDirEnt current_ent;
+};
+
+struct AlloyFile
+{
+	int fd;
 };
 
 static struct AlloyHostData *host_init(void)
@@ -49,6 +57,66 @@ static struct AlloyHostData *host_init(void)
 static void host_done(struct AlloyHostData *host_data)
 {
 	free(host_data);
+}
+
+static struct AlloyFile *host_open(struct AlloyHostData *host_data,
+                                   const char *path,
+                                   enum AlloyFileMode mode)
+{
+	(void) host_data;
+
+	struct AlloyFile *file = malloc(sizeof(*file));
+	if (file == NULL)
+		return ALLOY_NULL;
+
+	switch (mode)
+	{
+	case ALLOY_FILE_MODE_READ:
+		file->fd = open(path, O_RDONLY);
+		break;
+	case ALLOY_FILE_MODE_WRITE:
+		file->fd = open(path, O_WRONLY);
+		break;
+	case ALLOY_FILE_MODE_RW:
+		file->fd = open(path, O_RDWR);
+		break;
+	}
+
+	if (file->fd < 0)
+	{
+		free(file);
+		return ALLOY_NULL;
+	}
+
+	return file;
+}
+
+static void host_close(struct AlloyHostData *host_data,
+                       struct AlloyFile *file)
+{
+	(void) host_data;
+
+	if (file == ALLOY_NULL)
+		return;
+
+	if (file->fd >= 0)
+		close(file->fd);
+
+	free(file);
+}
+
+static alloy_ssize host_read(struct AlloyHostData *host_data,
+                             struct AlloyFile *file,
+                             void *buf,
+                             alloy_size buf_size)
+{
+	(void) host_data;
+
+	ssize_t read_count = read(file->fd, buf, buf_size);
+	if (read_count < 0)
+		return -1;
+
+	return (alloy_ssize) read_count;
 }
 
 static struct AlloyDir *host_opendir(struct AlloyHostData *host_data,
@@ -138,6 +206,9 @@ static void host_free_pages(struct AlloyHostData *host_data,
 const struct AlloyHost alloy_host = {
 	host_init,
 	host_done,
+	host_open,
+	host_close,
+	host_read,
 	host_opendir,
 	host_readdir,
 	host_closedir,

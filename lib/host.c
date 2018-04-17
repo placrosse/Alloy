@@ -44,6 +44,36 @@ void *alloy_host_alloc_pages(const struct AlloyHost *host,
 	return host->alloc_pages(host_data, page_count);
 }
 
+struct AlloyFile *alloy_host_open(const struct AlloyHost *host,
+                                  struct AlloyHostData *host_data,
+                                  const char *path,
+                                  enum AlloyFileMode mode)
+{
+	if (host->open == ALLOY_NULL)
+		return ALLOY_NULL;
+	else
+		return host->open(host_data, path, mode);
+}
+
+void alloy_host_close(const struct AlloyHost *host,
+                      struct AlloyHostData *host_data,
+                      struct AlloyFile *file)
+{
+	if (host->close != ALLOY_NULL)
+		return host->close(host_data, file);
+}
+
+alloy_ssize alloy_host_read(const struct AlloyHost *host,
+                            struct AlloyHostData *host_data,
+                            struct AlloyFile *file,
+                            void *buf,
+                            alloy_size buf_size)
+{
+	if (host->read == ALLOY_NULL)
+		return ALLOY_ENOSYS;
+	else
+		return host->read(host_data, file, buf, buf_size);
+}
 
 struct AlloyDir *alloy_host_opendir(const struct AlloyHost *host,
                                     struct AlloyHostData *host_data,

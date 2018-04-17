@@ -58,6 +58,21 @@ struct AlloyDirEnt
 	enum AlloyDirEntType type;
 };
 
+/** Determines what IO operations are
+ * allowed for an open file.
+ * @ingroup host-api
+ * */
+
+enum AlloyFileMode
+{
+	/** Read operations are allowed. */
+	ALLOY_FILE_MODE_READ,
+	/** Write operations are allowed. */
+	ALLOY_FILE_MODE_WRITE,
+	/** Both read and write operations are allowed. */
+	ALLOY_FILE_MODE_RW
+};
+
 /** Used to implement the interface that
  * Alloy requires from the host machine.
  * @ingroup host-api
@@ -69,6 +84,18 @@ struct AlloyHost
 	struct AlloyHostData *(*init)(void);
 	/** Releases memory from the host implementation data. */
 	void (*done)(struct AlloyHostData *host_data);
+	/** Opens a file on the host system. */
+	struct AlloyFile *(*open)(struct AlloyHostData *host_data,
+	                          const char *path,
+	                          enum AlloyFileMode);
+	/** Closes a previously open file. */
+	void (*close)(struct AlloyHostData *host_data,
+	              struct AlloyFile *file);
+	/** Read data from an open file. */
+	alloy_ssize (*read)(struct AlloyHostData *host_data,
+	                    struct AlloyFile *file,
+	                    void *buf,
+	                    alloy_size buf_size);
 	/** Opens a directory on the host system. */
 	struct AlloyDir *(*opendir)(struct AlloyHostData *host_data,
 	                            const char *path);
@@ -105,6 +132,51 @@ struct AlloyHostData *alloy_host_init(const struct AlloyHost *host);
 
 void alloy_host_done(const struct AlloyHost *host,
                      struct AlloyHostData *host_data);
+
+/** Opens a file for either reading, writing or both.
+ * @param host An initialized host structure.
+ * @param host_data The host implementation data.
+ * @param path The path of the file to open.
+ * @param mode The mode to open the file in.
+ * @returns If the file is found, then a pointer
+ * to the file structure is returned. If it
+ * is not found, then @ref ALLOY_NULL is returned.
+ * @ingroup host-api
+ * */
+
+struct AlloyFile *alloy_host_open(const struct AlloyHost *host,
+                                  struct AlloyHostData *host_data,
+                                  const char *path,
+                                  enum AlloyFileMode mode);
+
+/** Closes a file that was previously open
+ * with the function @ref alloy_host_open.
+ * @param host An initialized host structure.
+ * @param host_data Host implementation data.
+ * @param file An open file.
+ * @ingroup host-api
+ * */
+
+void alloy_host_close(const struct AlloyHost *host,
+                      struct AlloyHostData *host_data,
+                      struct AlloyFile *file);
+
+/** Reads data from an open file. The file
+ * must be opened for reading.
+ * @param host An initialized host structure.
+ * @param host_data Host implementation data.
+ * @param file A file opened for reading.
+ * @param buf The buffer to put the file data into.
+ * @param buf_size The number of bytes to read.
+ * @returns Zero on success, an error code on failure.
+ * @ingroup host-api
+ * */
+
+alloy_ssize alloy_host_read(const struct AlloyHost *host,
+                            struct AlloyHostData *host_data,
+                            struct AlloyFile *file,
+                            void *buf,
+                            alloy_size buf_size);
 
 /** Opens a directory for reading.
  * @param host An initialized host structure.

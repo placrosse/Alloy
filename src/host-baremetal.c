@@ -160,6 +160,11 @@ struct AlloyDir
 	struct AlloyDirEnt ent;
 };
 
+struct AlloyFile
+{
+	struct BMFSFile file;
+};
+
 struct AlloyHostData global_host_data;
 
 static struct AlloyHostData *host_init(void)
@@ -205,6 +210,71 @@ static void host_done(struct AlloyHostData *host_data)
 		host_data->heap_data = ALLOY_NULL;
 		host_data->heap_size = 0;
 	}
+}
+
+static struct AlloyFile *host_open(struct AlloyHostData *host_data,
+                                   const char *path,
+                                   enum AlloyFileMode mode)
+{
+	if (!host_data->bmfs_found)
+		return ALLOY_NULL;
+
+	struct AlloyHeap *heap = &host_data->heap;
+
+	struct AlloyFile *file = alloy_heap_malloc(heap, sizeof(*file));
+	if (file == ALLOY_NULL)
+		return ALLOY_NULL;
+
+	int err = bmfs_open_file(&host_data->bmfs, &file->file, path);
+	if (err != 0)
+	{
+		alloy_heap_free(heap, file);
+		return ALLOY_NULL;
+	}
+
+	switch (mode)
+	{
+	case ALLOY_FILE_MODE_READ:
+		bmfs_file_set_mode(&file->file, BMFS_FILE_MODE_READ);
+		break;
+	case ALLOY_FILE_MODE_WRITE:
+		bmfs_file_set_mode(&file->file, BMFS_FILE_MODE_WRITE);
+		break;
+	case ALLOY_FILE_MODE_RW:
+		bmfs_file_set_mode(&file->file, BMFS_FILE_MODE_RW);
+		break;
+	}
+
+	return file;
+}
+
+static void host_close(struct AlloyHostData *host_data,
+                       struct AlloyFile *file)
+{
+	if (file == ALLOY_NULL)
+		return;
+
+	bmfs_file_close(&file->file);
+
+	struct AlloyHeap *heap = &host_data->heap;
+
+	alloy_heap_free(heap, file);
+}
+
+static alloy_ssize host_read(struct AlloyHostData *host_data,
+                             struct AlloyFile *file,
+                             void *buf,
+                             alloy_size buf_size)
+{
+	(void) host_data;
+
+	bmfs_uint64 read_size = 0;
+
+	int err = bmfs_file_read(&file->file, buf, buf_size, &read_size);
+	if (err != 0)
+		return -1;
+
+	return (alloy_ssize) read_size;
 }
 
 static struct AlloyDir *host_opendir(struct AlloyHostData *host_data,
@@ -288,6 +358,9 @@ static void host_free_pages(struct AlloyHostData *host_data,
 const struct AlloyHost alloy_host = {
 	host_init,
 	host_done,
+	host_open,
+	host_close,
+	host_read,
 	host_opendir,
 	host_readdir,
 	host_closedir,
