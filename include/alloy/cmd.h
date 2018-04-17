@@ -28,6 +28,8 @@ struct AlloyHeap;
 
 enum AlloyCmdID
 {
+	/** Prints files to the standard output. */
+	ALLOY_CMD_CAT,
 	/** Clears the screen. */
 	ALLOY_CMD_CLEAR,
 	/** List directory contents. */
