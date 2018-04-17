@@ -692,7 +692,7 @@ static int cmd_clear(struct AlloyShell *shell)
 static int cmd_dir(struct AlloyShell *shell,
                    struct AlloyCmd *cmd)
 {
-	const char *path = "./";
+	const char *path = "/";
 
 	if (cmd->argc > 1)
 		path = cmd->argv[1];
