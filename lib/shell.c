@@ -588,6 +588,27 @@ static int shell_try_assignment(struct AlloyShell *shell)
 	return 0;
 }
 
+static struct AlloyFile *shell_open(struct AlloyShell *shell,
+                                    const char *path,
+                                    enum AlloyFileMode mode)
+{
+	return alloy_host_open(shell->host, shell->host_data, path, mode);
+}
+
+static void shell_close(struct AlloyShell *shell,
+                        struct AlloyFile *file)
+{
+	alloy_host_close(shell->host, shell->host_data, file);
+}
+
+static int shell_read(struct AlloyShell *shell,
+                      struct AlloyFile *file,
+                      void *buf,
+                      alloy_size buf_size)
+{
+	return alloy_host_read(shell->host, shell->host_data, file, buf, buf_size);
+}
+
 static int cmd_version(struct AlloyShell *shell)
 {
 	shell_write_z(shell, ALLOY_VERSION_STRING);
@@ -615,12 +636,47 @@ static int cmd_help_print_cmd(struct AlloyShell *shell,
 static int cmd_help(struct AlloyShell *shell)
 {
 	shell_write_z(shell, "Commands:\n");
+	cmd_help_print_cmd(shell, "cat    ", "Print file contents to screen.");
 	cmd_help_print_cmd(shell, "clear  ", "Clear the screen.");
 	cmd_help_print_cmd(shell, "dir    ", "List directory contents.");
 	cmd_help_print_cmd(shell, "echo   ", "Echo content to the standard output.");
 	cmd_help_print_cmd(shell, "exit   ", "Exit the shell.");
 	cmd_help_print_cmd(shell, "help   ", "Get help with a command.");
 	cmd_help_print_cmd(shell, "version", "Print this version of Alloy.");
+	return 0;
+}
+
+static int cmd_cat_file(struct AlloyShell *shell,
+                        struct AlloyFile *file)
+{
+	char buf[64];
+
+	for (;;)
+	{
+		alloy_ssize read_size = shell_read(shell, file, buf, sizeof(buf));
+		if (read_size <= 0)
+			break;
+
+		shell_write(shell, buf, (alloy_size) read_size);
+	}
+
+	return 0;
+}
+
+static int cmd_cat(struct AlloyShell *shell,
+                   const struct AlloyCmd *cmd)
+{
+	for (alloy_size i = 1; i < cmd->argc; i++)
+	{
+		struct AlloyFile *file = shell_open(shell, cmd->argv[i], ALLOY_FILE_MODE_READ);
+		if (file == ALLOY_NULL)
+			continue;
+
+		cmd_cat_file(shell, file);
+
+		shell_close(shell, file);
+	}
+
 	return 0;
 }
 
@@ -758,6 +814,9 @@ static int shell_run_cmd(struct AlloyShell *shell)
 
 	switch (cmd.id)
 	{
+	case ALLOY_CMD_CAT:
+		err = cmd_cat(shell, &cmd);
+		break;
 	case ALLOY_CMD_CLEAR:
 		err = cmd_clear(shell);
 		break;
