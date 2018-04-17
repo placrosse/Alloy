@@ -17,6 +17,15 @@ extern "C"
 
 struct AlloyHeap;
 
+/** Copies memory from one location to another.
+ * Overlap is not checked.
+ * @param dst The destination memory block.
+ * @param src The source memory block.
+ * @param size The number of bytes to copy.
+ * */
+
+void alloy_memcpy(void *dst, const void *src, alloy_size size);
+
 /** Compares two null-terminated strings.
  * @param a The primary string to compare.
  * @param b The secondary string to compare.

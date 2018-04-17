@@ -9,6 +9,16 @@
 
 #include <alloy/heap.h>
 
+void alloy_memcpy(void *dst, const void *src, alloy_size size)
+{
+	unsigned char *dst8 = (unsigned char *) dst;
+
+	const unsigned char *src8 = (const unsigned char *) src;
+
+	for (alloy_size i = 0; i < size; i++)
+		dst8[i] = src8[i];
+}
+
 int alloy_strcmp(const char *a, const char *b)
 {
 	for (;;)
