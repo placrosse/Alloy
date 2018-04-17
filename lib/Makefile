@@ -20,6 +20,7 @@ libfiles += input.o
 libfiles += scanner.o
 libfiles += scheme.o
 libfiles += shell.o
+libfiles += string.o
 libfiles += term.o
 
 .PHONY: all
@@ -50,6 +51,8 @@ scanner.o: scanner.c scanner.h types.h errno.h
 scheme.o: scheme.c scheme.h color.h types.h
 
 shell.o: shell.c shell.h term.h input.h
+
+string.o: string.c string.h types.h
 
 term.o: term.c term.h
 
