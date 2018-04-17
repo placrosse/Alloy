@@ -1,3 +1,10 @@
+/* ===============================================================
+ * Alloy - A platform-independent terminal and shell program.
+ * Copyright (C) 2017 - 2018 Return Infinity
+ * See LICENSE for license information.
+ * ===============================================================
+ */
+
 #ifndef ALLOY_TYPES_H
 #define ALLOY_TYPES_H
 
@@ -6,13 +13,25 @@ extern "C"
 {
 #endif
 
-/** Defines the largest type available on
- * the system. Ideal for representing indices
- * in memory.
+/** @defgroup types Types
+ * Used throughout the library to ensure
+ * consistency of data types.
+ * */
+
+/** Defines the largest type available on the system.
+ * Ideal for representing indices in memory.
  * @ingroup types
  * */
 
 typedef unsigned long long int alloy_size;
+
+/** Defines the largest signed type available on the system.
+ * Ideal for returning read counts or write counts, because
+ * it can assume a negative value to indicate an error.
+ * @ingroup types
+ * */
+
+typedef signed long long int alloy_ssize;
 
 /** A 64-bit unsigned integer.
  * @ingroup types
