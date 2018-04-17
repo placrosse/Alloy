@@ -147,7 +147,7 @@ static int xterm_set_cursor(struct AlloyTermData *term_data,
 	term_data->pos.column = pos->column;
 
 	fprintf(term_data->out,
-	        "\x1b[%u;%uH\n",
+	        "\x1b[%u;%uH",
 	        (unsigned int) pos->line,
 	        (unsigned int) pos->column);
 
