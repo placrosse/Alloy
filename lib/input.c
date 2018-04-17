@@ -81,7 +81,7 @@ void alloy_input_clear(struct AlloyInput *input)
 		input->buf[i] = 0;
 
 	input->buf_pos = 0;
-
+	input->buf_len = 0;
 	input->x_bias = 0;
 }
 
