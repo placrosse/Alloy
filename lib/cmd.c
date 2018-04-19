@@ -10,6 +10,35 @@
 #include <alloy/errno.h>
 #include <alloy/heap.h>
 #include <alloy/scanner.h>
+#include <alloy/string.h>
+
+static char *append_arg(struct AlloyCmd *cmd,
+                        char *arg,
+                        const char *end,
+                        alloy_size end_size)
+{
+	alloy_size arg_size = 0;
+
+	if (arg != ALLOY_NULL)
+		arg_size = alloy_strlen(arg);
+
+	char *tmp = arg;
+
+	alloy_size tmp_size = 0;
+	tmp_size += arg_size;
+	tmp_size += end_size;
+
+	tmp = alloy_heap_realloc(cmd->heap, tmp, tmp_size + 1);
+	if (tmp == ALLOY_NULL)
+		return ALLOY_NULL;
+
+	for (alloy_size i = 0; i < end_size; i++)
+		tmp[arg_size + i] = end[i];
+
+	tmp[arg_size + end_size] = 0;
+
+	return tmp;
+}
 
 static int push_arg(struct AlloyCmd *cmd,
                     const char *arg,
@@ -187,6 +216,8 @@ int alloy_cmd_parse(struct AlloyCmd *cmd, const char *line)
 
 	alloy_scanner_set_buf_z(&scanner, line);
 
+	char *arg = ALLOY_NULL;
+
 	while (!alloy_scanner_eof(&scanner))
 	{
 		struct AlloyToken *token = alloy_scanner_next(&scanner);
@@ -198,6 +229,17 @@ int alloy_cmd_parse(struct AlloyCmd *cmd, const char *line)
 		      || (token->id == ALLOY_TOKEN_NEWLINE)
 		      || (token->id == ALLOY_TOKEN_SPACE))
 		{
+			if (arg == ALLOY_NULL)
+				continue;
+
+			int err = push_arg(cmd, arg, alloy_strlen(arg));
+			if (err != 0)
+				return err;
+
+			alloy_heap_free(cmd->heap, arg);
+
+			arg = ALLOY_NULL;
+
 			continue;
 		}
 		else if (token->id == ALLOY_TOKEN_STRING)
@@ -207,16 +249,38 @@ int alloy_cmd_parse(struct AlloyCmd *cmd, const char *line)
 			if (token->buf_len < 2)
 				continue;
 
-			int err = push_arg(cmd, &token->buf[1], token->buf_len - 2);
-			if (err != 0)
-				return err;
+			char *tmp = append_arg(cmd, arg, &token->buf[1], token->buf_len - 2);
+			if (tmp == ALLOY_NULL)
+			{
+				alloy_heap_free(cmd->heap, tmp);
+				return ALLOY_ENOMEM;
+			}
+
+			arg = tmp;
 
 			continue;
 		}
 
-		int err = push_arg(cmd, token->buf, token->buf_len);
+		char *tmp = append_arg(cmd, arg, token->buf, token->buf_len);
+		if (tmp == ALLOY_NULL)
+		{
+			alloy_heap_free(cmd->heap, tmp);
+			return ALLOY_ENOMEM;
+		}
+
+		arg = tmp;
+	}
+
+	if (arg != ALLOY_NULL)
+	{
+		int err = push_arg(cmd, arg, alloy_strlen(arg));
 		if (err != 0)
+		{
+			alloy_heap_free(cmd->heap, arg);
 			return err;
+		}
+
+		alloy_heap_free(cmd->heap, arg);
 	}
 
 	if (cmd->argc > 0)
