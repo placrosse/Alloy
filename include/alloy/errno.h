@@ -42,4 +42,10 @@
 
 #define ALLOY_EINVAL 5
 
+/** No such file or directory.
+ * @ingroup errno
+ * */
+
+#define ALLOY_ENOENT 6
+
 #endif /* ALLOY_ERRNO_H */
