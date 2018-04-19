@@ -27,7 +27,7 @@ else
 	CFLAGS="$CFLAGS -DALLOY_WITH_BAREMETAL=1"
 	LDFLAGS="$LDFLAGS -nostdlib -nostartfiles -nodefaultlibs -T alloy.ld"
 	$CC $CFLAGS -c font.c
-	$CC $CFLAGS -c vesaterm.c
+	$CC $CFLAGS -c -O3 vesaterm.c
 	$CC $CFLAGS -c host-baremetal.c
 	$LD $LDFLAGS -o alloy alloy.o font.o vesaterm.o host-baremetal.o ../lib/liballoy.a -lbmfs
 	$OBJCOPY -O binary alloy alloy.bin
