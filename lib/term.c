@@ -38,7 +38,7 @@ int alloy_term_clear_line(const struct AlloyTerm *term,
 
 	unsigned int width = term_size.width;
 
-	struct AlloyCursorPos original_pos;
+	struct AlloyTermPos original_pos;
 
 	err = alloy_term_get_cursor(term, term_data, &original_pos);
 	if (err != 0)
@@ -46,7 +46,7 @@ int alloy_term_clear_line(const struct AlloyTerm *term,
 
 	unsigned int original_line = original_pos.line;
 
-	struct AlloyCursorPos start_pos;
+	struct AlloyTermPos start_pos;
 	start_pos.line = original_line;
 	start_pos.column = 1;
 
@@ -78,7 +78,7 @@ int alloy_term_get_char(const struct AlloyTerm *term,
 
 int alloy_term_get_cursor(const struct AlloyTerm *term,
                           struct AlloyTermData *term_data,
-                          struct AlloyCursorPos *cursor_pos)
+                          struct AlloyTermPos *cursor_pos)
 {
 	if (term->get_cursor == ALLOY_NULL)
 		return ALLOY_ENOSYS;
@@ -108,7 +108,7 @@ int alloy_term_set_background(const struct AlloyTerm *term,
 
 int alloy_term_set_cursor(const struct AlloyTerm *term,
                           struct AlloyTermData *term_data,
-                          const struct AlloyCursorPos *pos)
+                          const struct AlloyTermPos *pos)
 {
 	if (term->set_cursor == ALLOY_NULL)
 		return ALLOY_ENOSYS;

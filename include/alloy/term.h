@@ -1,3 +1,10 @@
+/* ===============================================================
+ * Alloy - A platform-independent terminal and shell program.
+ * Copyright (C) 2017 - 2018 Return Infinity
+ * See LICENSE for license information.
+ * ===============================================================
+ */
+
 #ifndef ALLOY_TERM_H
 #define ALLOY_TERM_H
 
@@ -11,7 +18,7 @@ extern "C"
 struct AlloyColor;
 struct AlloyTermData;
 
-struct AlloyCursorPos
+struct AlloyTermPos
 {
 	unsigned int line;
 	unsigned int column;
@@ -37,7 +44,7 @@ struct AlloyTerm
 	                alloy_utf8 *c);
 	/** Gets the current cursor position. */
 	int (*get_cursor)(struct AlloyTermData *term_data,
-	                  struct AlloyCursorPos *cursor_pos);
+	                  struct AlloyTermPos *cursor_pos);
 	/** Gets the width and height, in character spaces, of the terminal. */
 	int (*get_size)(struct AlloyTermData *term_data,
 	                struct AlloyTermSize *term_size);
@@ -50,7 +57,7 @@ struct AlloyTerm
 	                      const struct AlloyColor *background_color);
 	/** Sets the cursor position. */
 	int (*set_cursor)(struct AlloyTermData *term_data,
-	                  const struct AlloyCursorPos *cursor_pos);
+	                  const struct AlloyTermPos *cursor_pos);
 	/** Sets the foreground color. */
 	int (*set_foreground)(struct AlloyTermData *term_data,
 	                      const struct AlloyColor *foreground);
@@ -73,7 +80,7 @@ int alloy_term_get_char(const struct AlloyTerm *term,
 
 int alloy_term_get_cursor(const struct AlloyTerm *term,
                           struct AlloyTermData *term_data,
-                          struct AlloyCursorPos *cursor_pos);
+                          struct AlloyTermPos *cursor_pos);
 
 int alloy_term_get_size(const struct AlloyTerm *term,
                         struct AlloyTermData *term_data,
@@ -85,7 +92,7 @@ int alloy_term_set_background(const struct AlloyTerm *term,
 
 int alloy_term_set_cursor(const struct AlloyTerm *term,
                           struct AlloyTermData *term_data,
-                          const struct AlloyCursorPos *pos);
+                          const struct AlloyTermPos *pos);
 
 int alloy_term_set_foreground(const struct AlloyTerm *term,
                               struct AlloyTermData *term_data,

@@ -21,7 +21,7 @@ struct AlloyTermData
 	alloy_size tab_size;
 	FILE *out;
 	FILE *in;
-	struct AlloyCursorPos pos;
+	struct AlloyTermPos pos;
 	struct termios original_attr;
 };
 
@@ -109,7 +109,7 @@ static int xterm_get_char(struct AlloyTermData *term_data,
 }
 
 static int xterm_get_cursor(struct AlloyTermData *term_data,
-                            struct AlloyCursorPos *pos)
+                            struct AlloyTermPos *pos)
 {
 	pos->line = term_data->pos.line;
 	pos->column = term_data->pos.column;
@@ -141,7 +141,7 @@ static int xterm_set_background(struct AlloyTermData *term_data,
 }
 
 static int xterm_set_cursor(struct AlloyTermData *term_data,
-                            const struct AlloyCursorPos *pos)
+                            const struct AlloyTermPos *pos)
 {
 	term_data->pos.line = pos->line;
 	term_data->pos.column = pos->column;
