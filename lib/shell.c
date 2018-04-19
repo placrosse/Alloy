@@ -104,6 +104,9 @@ static int init_term(struct AlloyShell *shell)
 	if (shell->term_data == ALLOY_NULL)
 		return ALLOY_ENOMEM;
 
+	alloy_term_set_foreground(shell->term, shell->term_data, &shell->scheme.normal_foreground);
+	alloy_term_set_background(shell->term, shell->term_data, &shell->scheme.normal_background);
+
 	return 0;
 }
 
@@ -372,7 +375,7 @@ static int shell_get_line(struct AlloyShell *shell)
 	alloy_size offset = 0;
 	alloy_size column = 0;
 
-	struct AlloyCursorPos pos;
+	struct AlloyTermPos pos;
 
 	int err = shell_prompt(shell);
 	if (err != 0)
@@ -384,8 +387,15 @@ static int shell_get_line(struct AlloyShell *shell)
 
 	column = pos.column;
 
-	if (column > 4)
-		column = pos.column;
+	/* TODO : setting the cursor like this
+	 * is a hack to make the vesaterm work.
+	 * Eventually, this should be fixed in
+	 * the vesaterm, so this line can be
+	 * taken out.
+	 * */
+	err = alloy_term_set_cursor(shell->term, shell->term_data, &pos);
+	if (err != 0)
+		return err;
 
 	for (;;)
 	{

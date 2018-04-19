@@ -22,9 +22,9 @@ struct AlloyTermData
 {
 	struct AlloyColor foreground;
 	struct AlloyColor background;
+	struct AlloyTermPos writer_pos;
+	struct AlloyTermPos cursor_pos;
 	alloy_size tab_width;
-	alloy_size line;
-	alloy_size column;
 	alloy_size x_pos;
 	alloy_size y_pos;
 	alloy_size x_res;
@@ -33,6 +33,43 @@ struct AlloyTermData
 	alloy_uint8 *frame_buffer;
 	alloy_uint8 *swap_buffer;
 };
+
+static int vesaterm_invert(struct AlloyTermData *term,
+                           const struct AlloyTermPos *pos)
+{
+	const struct AlloyGlyph *space_glyph = alloy_font_get_glyph(&alloy_font, ' ');
+	if (space_glyph == ALLOY_NULL)
+		return -1;
+
+	unsigned int x_pos = (pos->column - 1) * space_glyph->advance;
+
+	unsigned int y_pos = (pos->line - 1) * alloy_font.line_height;
+
+	unsigned char *buf = (unsigned char *) term->frame_buffer;
+
+	unsigned char *buf_swap = (unsigned char *) term->swap_buffer;
+
+	for (unsigned int y = 0; y < alloy_font.line_height; y++)
+	{
+		for (unsigned int x = 0; x < space_glyph->advance; x++)
+		{
+			unsigned int buf_offset = 0;
+			buf_offset += (y + y_pos) * term->x_res;
+			buf_offset += x + x_pos;
+			buf_offset *= term->depth / 8;
+
+			buf[buf_offset + 0] = 0xff - buf_swap[buf_offset + 0];
+			buf[buf_offset + 1] = 0xff - buf_swap[buf_offset + 1];
+			buf[buf_offset + 2] = 0xff - buf_swap[buf_offset + 2];
+
+			buf_swap[buf_offset + 0] = 0xff - buf_swap[buf_offset + 0];
+			buf_swap[buf_offset + 1] = 0xff - buf_swap[buf_offset + 1];
+			buf_swap[buf_offset + 2] = 0xff - buf_swap[buf_offset + 2];
+		}
+	}
+
+	return 0;
+}
 
 static int vesaterm_scroll_down(struct AlloyTermData *term)
 {
@@ -68,7 +105,13 @@ static int vesaterm_write_char(struct AlloyTermData *term, char c)
 {
 	if (c == '\n')
 	{
-		term->column = 1;
+		/* Remove the cursor block from the end of the
+		 * line, if it is there. */
+		if ((term->writer_pos.line == term->cursor_pos.line)
+		 && (term->writer_pos.column == term->cursor_pos.column))
+			vesaterm_invert(term, &term->cursor_pos);
+
+		term->writer_pos.column = 1;
 
 		term->x_pos = 0;
 
@@ -77,7 +120,7 @@ static int vesaterm_write_char(struct AlloyTermData *term, char c)
 		if ((term->y_pos + (alloy_font.line_height * 2)) >= term->y_res)
 			return vesaterm_scroll_down(term);
 
-		term->line++;
+		term->writer_pos.line++;
 
 		term->y_pos += alloy_font.line_height;
 
@@ -85,7 +128,7 @@ static int vesaterm_write_char(struct AlloyTermData *term, char c)
 	}
 	else if (c == '\t')
 	{
-		while (term->column % term->tab_width)
+		while (term->writer_pos.column % term->tab_width)
 		{
 			int err = vesaterm_write_char(term, ' ');
 			if (err != 0)
@@ -103,6 +146,7 @@ static int vesaterm_write_char(struct AlloyTermData *term, char c)
 	for (unsigned int y = 0; (y < (alloy_font.ascender - alloy_font.descender)) && ((y + term->y_pos) < term->y_res); y++)
 	{
 		unsigned int background_width = glyph->advance;
+
 		for (unsigned int x = 0; (x < background_width) && ((x + term->x_pos) < term->x_res); x++)
 		{
 			unsigned buffer_offset = 0;
@@ -128,7 +172,6 @@ static int vesaterm_write_char(struct AlloyTermData *term, char c)
 
 	for (unsigned int y = 0; (y < glyph->height) && ((y + term->y_pos + alloy_font.ascender - glyph->top) < term->y_res); y++)
 	{
-
 		for (unsigned int x = 0; (x < glyph->width) && ((x + term->x_pos + glyph->left) < term->x_res); x++)
 		{
 			unsigned int glyph_offset = 0;
@@ -168,7 +211,8 @@ static int vesaterm_write_char(struct AlloyTermData *term, char c)
 	}
 
 	term->x_pos += glyph->advance;
-	term->column++;
+
+	term->writer_pos.column++;
 
 	return 0;
 }
@@ -199,10 +243,10 @@ static int vesaterm_get_char(struct AlloyTermData *term,
 }
 
 static int vesaterm_get_cursor(struct AlloyTermData *term,
-                               struct AlloyCursorPos *pos)
+                               struct AlloyTermPos *pos)
 {
-	pos->line = term->line;
-	pos->column = term->column;
+	pos->line = term->writer_pos.line;
+	pos->column = term->writer_pos.column;
 	return 0;
 }
 
@@ -234,15 +278,15 @@ static int vesaterm_set_background(struct AlloyTermData *term,
 }
 
 static int vesaterm_set_cursor(struct AlloyTermData *term,
-                               const struct AlloyCursorPos *pos)
+                               const struct AlloyTermPos *pos)
 {
 	/* column and line must be greater than zero */
 
 	if ((pos->line <= 0) || (pos->column <= 0))
 		return -1;
 
-	term->line = pos->line;
-	term->column = pos->column;
+	term->writer_pos.line = pos->line;
+	term->writer_pos.column = pos->column;
 
 	/* determine the new x and y positions by
 	 * using the width of a space character and
@@ -256,6 +300,11 @@ static int vesaterm_set_cursor(struct AlloyTermData *term,
 	term->x_pos = (pos->column - 1) * space_glyph->advance;
 
 	term->y_pos = (pos->line - 1) * alloy_font.line_height;
+
+	term->cursor_pos.line = pos->line;
+	term->cursor_pos.column = pos->column;
+
+	vesaterm_invert(term, pos);
 
 	return 0;
 }
@@ -296,10 +345,13 @@ static int vesaterm_clear(struct AlloyTermData *term)
 			byte_offset *= (term->depth / 8);
 			/* set the background red pixel */
 			term->frame_buffer[byte_offset + 0] = term->background.blue;
+			term->swap_buffer[byte_offset + 0] = term->background.blue;
 			/* set the background green pixel */
 			term->frame_buffer[byte_offset + 1] = term->background.green;
+			term->swap_buffer[byte_offset + 1] = term->background.green;
 			/* set the background blue pixel */
 			term->frame_buffer[byte_offset + 2] = term->background.red;
+			term->swap_buffer[byte_offset + 2] = term->background.red;
 		}
 	}
 
@@ -307,8 +359,8 @@ static int vesaterm_clear(struct AlloyTermData *term)
 
 	term->x_pos = 0;
 	term->y_pos = 0;
-	term->line = 1;
-	term->column = 1;
+	term->writer_pos.line = 1;
+	term->writer_pos.column = 1;
 
 	return 0;
 }
@@ -333,8 +385,10 @@ struct AlloyTermData *vesaterm_init(void)
 {
 	struct AlloyTermData *term = &global_term;
 	term->tab_width = 8;
-	term->line = 1;
-	term->column = 1;
+	term->writer_pos.line = 1;
+	term->writer_pos.column = 1;
+	term->cursor_pos.line = 1;
+	term->cursor_pos.column = 1;
 	term->foreground = alloy_white;
 	term->background = alloy_black;
 	term->x_pos = 0;
@@ -351,6 +405,7 @@ struct AlloyTermData *vesaterm_init(void)
 	page_count += BAREMETAL_PAGE_SIZE;
 	page_count /= BAREMETAL_PAGE_SIZE;
 	b_mem_allocate((void **) &term->swap_buffer, page_count);
+	vesaterm_invert(term, &term->cursor_pos);
 #else /* ALLOY_WITH_BAREMETAL */
 	term->x_res = 1024;
 	term->y_res = 768;
