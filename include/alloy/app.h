@@ -100,6 +100,17 @@ void alloy_app_init(struct AlloyApp *app);
 void alloy_app_set_host(struct AlloyApp *app,
                         struct AlloyAppHost *app_host);
 
+/** Sets the arguments that the app will be stared with.
+ * @param app An initialized app structure.
+ * @param argc The number of arguments passed to the app.
+ * @param argv The argument array.
+ * @ingroup app-api
+ * */
+
+void alloy_app_set_args(struct AlloyApp *app,
+                        int argc,
+                        char **argv);
+
 /** The entry point of an application.
  * The app container structure has all the function
  * callbacks and data used to implement the standard library.

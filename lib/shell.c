@@ -868,6 +868,7 @@ static int cmd_external(struct AlloyShell *shell,
 	struct AlloyApp app;
 	alloy_app_init(&app);
 	alloy_app_set_host(&app, &app_host);
+	alloy_app_set_args(&app, cmd->argc, cmd->argv);
 
 	int exitcode = entry(&app.container);
 	if ((exitcode != 0) && !shell->interactive)

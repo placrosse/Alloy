@@ -127,3 +127,10 @@ void alloy_app_set_host(struct AlloyApp *app,
 		app->container.host = app_host;
 }
 
+void alloy_app_set_args(struct AlloyApp *app,
+                        int argc,
+                        char **argv)
+{
+	app->container.argc = argc;
+	app->container.argv = argv;
+}
