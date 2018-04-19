@@ -32,6 +32,8 @@ enum AlloyCmdID
 	ALLOY_CMD_CAT,
 	/** Clears the screen. */
 	ALLOY_CMD_CLEAR,
+	/** Colors a component of the terminal string. */
+	ALLOY_CMD_COLOR,
 	/** List directory contents. */
 	ALLOY_CMD_DIR,
 	/** Writes to the standard output. */

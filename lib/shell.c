@@ -622,6 +622,7 @@ static int cmd_help(struct AlloyShell *shell)
 	shell_write_z(shell, "Commands:\n");
 	cmd_help_print_cmd(shell, "cat    ", "Print file contents to screen.");
 	cmd_help_print_cmd(shell, "clear  ", "Clear the screen.");
+	cmd_help_print_cmd(shell, "color  ", "Color a component of the terminal.");
 	cmd_help_print_cmd(shell, "dir    ", "List directory contents.");
 	cmd_help_print_cmd(shell, "echo   ", "Echo content to the standard output.");
 	cmd_help_print_cmd(shell, "exit   ", "Exit the shell.");
@@ -669,6 +670,79 @@ static int cmd_clear(struct AlloyShell *shell)
 	int err = alloy_term_clear(shell->term, shell->term_data);
 	if (err != 0)
 		return err;
+
+	return 0;
+}
+
+static int cmd_color(struct AlloyShell *shell,
+                     const struct AlloyCmd *cmd)
+{
+	if (cmd->argc < 2)
+	{
+		shell_write_z(shell, "No component name specified.\n");
+		return ALLOY_EINVAL;
+	}
+
+	if (cmd->argc < 3)
+	{
+		shell_write_z(shell, "No color specified.\n");
+		return ALLOY_EINVAL;
+	}
+
+	const char *color_str = cmd->argv[2];
+
+	struct AlloyColor color;
+
+	int err = alloy_color_parse(&color, color_str);
+	if (err != 0)
+	{
+		shell_write_z(shell, "Invalid color value '");
+		shell_write_z(shell, color_str);
+		shell_write_z(shell, "'.\n");
+		return ALLOY_EINVAL;
+	}
+
+	const char *component = cmd->argv[1];
+
+	if (alloy_strcmp(component, "normal_foreground") == 0)
+	{
+		shell->scheme.normal_foreground = color;
+	}
+	else if (alloy_strcmp(component, "normal_background") == 0)
+	{
+		shell->scheme.normal_background = color;
+	}
+	else if (alloy_strcmp(component, "string_literal") == 0)
+	{
+		shell->scheme.string_literal = color;
+	}
+	else if (alloy_strcmp(component, "cmd_builtin") == 0)
+	{
+		shell->scheme.cmd_builtin = color;
+	}
+	else if (alloy_strcmp(component, "cmd_external") == 0)
+	{
+		shell->scheme.cmd_external = color;
+	}
+	else if (alloy_strcmp(component, "comment") == 0)
+	{
+		shell->scheme.comment = color;
+	}
+	else if (alloy_strcmp(component, "numerical") == 0)
+	{
+		shell->scheme.numerical = color;
+	}
+	else if (alloy_strcmp(component, "error") == 0)
+	{
+		shell->scheme.error = color;
+	}
+	else
+	{
+		shell_write_z(shell, "Invalid component name '");
+		shell_write_z(shell, component);
+		shell_write_z(shell, "'.\n");
+		return ALLOY_EINVAL;
+	}
 
 	return 0;
 }
@@ -804,6 +878,9 @@ static int shell_run_cmd(struct AlloyShell *shell)
 	case ALLOY_CMD_CLEAR:
 		err = cmd_clear(shell);
 		break;
+	case ALLOY_CMD_COLOR:
+		err = cmd_color(shell, &cmd);
+		break;
 	case ALLOY_CMD_DIR:
 		err = cmd_dir(shell, &cmd);
 		break;
@@ -839,6 +916,7 @@ void alloy_shell_init(struct AlloyShell *shell)
 	shell->quit_flag = ALLOY_FALSE;
 	shell->input = ALLOY_NULL;
 	shell->var_table = ALLOY_NULL;
+	shell->interactive = ALLOY_TRUE;
 	alloy_scheme_init(&shell->scheme);
 }
 
@@ -932,7 +1010,7 @@ int alloy_shell_run_once(struct AlloyShell *shell)
 	if (err != 0)
 	{
 		err = shell_run_cmd(shell);
-		if (err != 0)
+		if ((err != 0) && (!shell->interactive))
 		{
 			shell_write_z(shell, "Failed to run command.\n");
 			return err;

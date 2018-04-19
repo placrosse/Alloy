@@ -46,6 +46,9 @@ struct AlloyShell
 	alloy_bool quit_flag;
 	/** Set to @ref ALLOY_TRUE if the heap was initialized. */
 	alloy_bool heap_ready;
+	/** Set to @ref ALLOY_TRUE if the shell interacts with a user.
+	 * This affects the behavior of the shell under certain conditions. */
+	alloy_bool interactive;
 	/** The color scheme for the terminal interface. */
 	struct AlloyScheme scheme;
 	/** The variable table for the shell.  */

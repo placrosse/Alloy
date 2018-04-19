@@ -96,6 +96,14 @@ enum AlloyCmdID alloy_cmd_id_parse(const char *cmd, alloy_size cmd_len)
 	 && (cmd[4] == 'r'))
 		return ALLOY_CMD_CLEAR;
 
+	if ((cmd_len == 5)
+	 && (cmd[0] == 'c')
+	 && (cmd[1] == 'o')
+	 && (cmd[2] == 'l')
+	 && (cmd[3] == 'o')
+	 && (cmd[4] == 'r'))
+		return ALLOY_CMD_COLOR;
+
 	if ((cmd_len == 3)
 	 && (cmd[0] == 'd')
 	 && (cmd[1] == 'i')
