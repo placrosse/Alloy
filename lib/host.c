@@ -70,7 +70,7 @@ alloy_ssize alloy_host_read(const struct AlloyHost *host,
                             alloy_size buf_size)
 {
 	if (host->read == ALLOY_NULL)
-		return ALLOY_ENOSYS;
+		return -1;
 	else
 		return host->read(host_data, file, buf, buf_size);
 }

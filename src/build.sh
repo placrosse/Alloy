@@ -4,14 +4,12 @@ set -e
 
 ../utils/alloy-font-generator
 
-LD=gcc
-LDFLAGS=
-
 CC=gcc
 CFLAGS="$CFLAGS -Wall -Wextra -Werror -Wfatal-errors -g"
 CFLAGS="$CFLAGS -fomit-frame-pointer -fno-stack-protector -mno-red-zone"
 CFLAGS="$CFLAGS -I ../include"
 CFLAGS="$CFLAGS -std=gnu99"
+CFLAGS="$CFLAGS -g"
 
 OBJCOPY=objcopy
 NASM=nasm
@@ -19,17 +17,21 @@ NASM=nasm
 $CC $CFLAGS -c alloy.c
 
 if [ -z ${ALLOY_WITH_BAREMETAL+x} ]; then
+	LD=gcc
+	LDFLAGS=
 	$CC $CFLAGS -c xterm.c
 	$CC $CFLAGS -c host-linux.c
 	$LD $LDFLAGS -o alloy xterm.o host-linux.o alloy.o ../lib/liballoy.a
 else
 	CFLAGS="$CFLAGS -nostdinc"
+	CFLAGS="$CFLAGS -nodefaultlibs"
 	CFLAGS="$CFLAGS -DALLOY_WITH_BAREMETAL=1"
+	LD=ld
 	LDFLAGS="$LDFLAGS -nostdlib -nostartfiles -nodefaultlibs -T alloy.ld"
 	$CC $CFLAGS -c font.c
 	$CC $CFLAGS -c -O3 vesaterm.c
 	$CC $CFLAGS -c host-baremetal.c
-	$LD $LDFLAGS -o alloy alloy.o font.o vesaterm.o host-baremetal.o ../lib/liballoy.a -lbmfs
+	$LD $LDFLAGS -o alloy alloy.o font.o vesaterm.o host-baremetal.o ../lib/liballoy.a "$BMFS_LIBRARY"
 	$OBJCOPY -O binary alloy alloy.bin
 fi
 

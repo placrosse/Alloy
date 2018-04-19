@@ -9,7 +9,9 @@ CFLAGS="${CFLAGS} -fomit-frame-pointer"
 CFLAGS="${CFLAGS} -mno-red-zone"
 CFLAGS="${CFLAGS} -I ../include"
 CFLAGS="${CFLAGS} -std=gnu99"
+CFLAGS="${CFLAGS} -g"
 
+$CC $CFLAGS -c app.c
 $CC $CFLAGS -c cmd.c
 $CC $CFLAGS -c color.c
 $CC $CFLAGS -c heap.c
@@ -25,4 +27,4 @@ $CC $CFLAGS -c var.c
 AR=ar
 ARFLAGS=rcs
 
-$AR $ARFLAGS liballoy.a cmd.o color.o heap.o host.o input.o scanner.o scheme.o shell.o string.o term.o var.o
+$AR $ARFLAGS liballoy.a app.o cmd.o color.o heap.o host.o input.o scanner.o scheme.o shell.o string.o term.o var.o

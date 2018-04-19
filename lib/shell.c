@@ -7,6 +7,7 @@
 
 #include <alloy/shell.h>
 
+#include <alloy/app.h>
 #include <alloy/cmd.h>
 #include <alloy/errno.h>
 #include <alloy/keys.h>
@@ -817,6 +818,67 @@ static int cmd_echo(struct AlloyShell *shell,
 	return 0;
 }
 
+static int cmd_external(struct AlloyShell *shell,
+                        struct AlloyCmd *cmd)
+{
+#ifndef ALLOY_WITH_BAREMETAL
+	(void) shell;
+	(void) cmd;
+	return ALLOY_ENOSYS;
+#endif
+	if (cmd->argc == 0)
+		return 0;
+
+	struct AlloyFile *app_file = shell_open(shell, cmd->argv[0], ALLOY_FILE_MODE_READ);
+	if (app_file == ALLOY_NULL)
+		return ALLOY_ENOENT;
+
+	unsigned char *app_data = (unsigned char *) 0xffff800000000000;
+
+	alloy_size app_pos = 0;
+
+	for (;;)
+	{
+		alloy_ssize read_size = shell_read(shell, app_file, &app_data[app_pos], 4096);
+		if (read_size == 0)
+			break;
+		else if (read_size < 0)
+		{
+			return ALLOY_EIO;
+		}
+
+		app_pos += (alloy_size) read_size;
+	}
+
+	shell_close(shell, app_file);
+
+	if (app_pos == 0)
+	{
+		return ALLOY_EINVAL;
+	}
+
+	alloy_app_entry entry = (alloy_app_entry) app_data;
+
+	struct AlloyAppHost app_host;
+	app_host.term = shell->term;
+	app_host.term_data = shell->term_data;
+	app_host.host = shell->host;
+	app_host.host_data = shell->host_data;
+
+	struct AlloyApp app;
+	alloy_app_init(&app);
+	alloy_app_set_host(&app, &app_host);
+
+	int exitcode = entry(&app.container);
+	if ((exitcode != 0) && !shell->interactive)
+	{
+		/* TODO : fail out of a script. */
+		return 0;
+	}
+
+	return 0;
+}
+
 static int cmd_unknown(struct AlloyShell *shell,
                        struct AlloyCmd *cmd)
 {
@@ -897,7 +959,11 @@ static int shell_run_cmd(struct AlloyShell *shell)
 		err = cmd_help(shell);
 		break;
 	case ALLOY_CMD_UNKNOWN:
-		err = cmd_unknown(shell, &cmd);
+
+		err = cmd_external(shell, &cmd);
+		if (err != 0)
+			err = cmd_unknown(shell, &cmd);
+
 		break;
 	}
 

@@ -1,7 +1,11 @@
 #!/bin/bash
 
-set -u
 set -e
+
+if [ ! -z ${ALLOY_WITH_BAREMETAL+x} ]; then
+	CFLAGS="${CFLAGS} -DALLOY_WITH_BAREMETAL=1"
+	export CFLAGS
+fi
 
 cd fonts/source-code-pro
 ./build.sh
