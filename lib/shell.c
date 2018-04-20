@@ -992,11 +992,11 @@ static int shell_run_cmd(struct AlloyShell *shell)
 		{
 			shell_write_z(shell, "Failed reading application from disk.\n");
 		}
-		else if (err != ALLOY_ENOENT)
+		else if (err == ALLOY_ENOENT)
 		{
 			err = cmd_unknown(shell, &cmd);
 		}
-		else
+		else if (err != 0)
 		{
 			shell_write_z(shell, "Failed to load application.\n");
 		}
