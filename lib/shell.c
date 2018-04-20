@@ -666,6 +666,40 @@ static int cmd_cat(struct AlloyShell *shell,
 	return 0;
 }
 
+static int cmd_cd(struct AlloyShell *shell,
+                  const struct AlloyCmd *cmd)
+{
+	const char *path = ALLOY_NULL;
+
+	if (cmd->argc < 2)
+	{
+		path = "/Home";
+	}
+	else if (cmd->argc > 2)
+	{
+		shell_write_z(shell, "Trailing arguments found.\n");
+		return ALLOY_EINVAL;
+	}
+	else
+	{
+		path = cmd->argv[1];
+	}
+
+	int err = alloy_shell_chdir(shell, path);
+	if (err != 0)
+	{
+		shell_write_z(shell, "Failed to change directory to ");
+		shell_set_foreground(shell, &shell->scheme.string_literal);
+		shell_write_z(shell, "'");
+		shell_write_z(shell, path);
+		shell_write_z(shell, "'");
+		shell_set_foreground(shell, &shell->scheme.normal_foreground);
+		return err;
+	}
+
+	return 0;
+}
+
 static int cmd_clear(struct AlloyShell *shell)
 {
 	int err = alloy_term_clear(shell->term, shell->term_data);
@@ -960,6 +994,9 @@ static int shell_run_cmd(struct AlloyShell *shell)
 	case ALLOY_CMD_CAT:
 		err = cmd_cat(shell, &cmd);
 		break;
+	case ALLOY_CMD_CD:
+		err = cmd_cd(shell, &cmd);
+		break;
 	case ALLOY_CMD_CLEAR:
 		err = cmd_clear(shell);
 		break;
@@ -1009,6 +1046,22 @@ static int shell_run_cmd(struct AlloyShell *shell)
 	return err;
 }
 
+static int shell_chdir_abs(struct AlloyShell *shell,
+                           const char *path)
+{
+	(void) shell;
+	(void) path;
+	return ALLOY_ENOSYS;
+}
+
+static int shell_chdir_rel(struct AlloyShell *shell,
+                           const char *path)
+{
+	(void) shell;
+	(void) path;
+	return ALLOY_ENOSYS;
+}
+
 void alloy_shell_init(struct AlloyShell *shell)
 {
 	shell->heap_ready = ALLOY_FALSE;
@@ -1020,6 +1073,7 @@ void alloy_shell_init(struct AlloyShell *shell)
 	shell->input = ALLOY_NULL;
 	shell->var_table = ALLOY_NULL;
 	shell->interactive = ALLOY_TRUE;
+	shell->current_path = ALLOY_NULL;
 	alloy_scheme_init(&shell->scheme);
 }
 
@@ -1052,6 +1106,17 @@ void alloy_shell_done(struct AlloyShell *shell)
 		shell->host = ALLOY_NULL;
 		shell->host_data = ALLOY_NULL;
 	}
+}
+
+int alloy_shell_chdir(struct AlloyShell *shell,
+                      const char *path)
+{
+	if (path == ALLOY_NULL)
+		return ALLOY_EFAULT;
+	else if (path[0] == '/')
+		return shell_chdir_abs(shell, path);
+	else
+		return shell_chdir_rel(shell, path);
 }
 
 int alloy_shell_run(struct AlloyShell *shell)

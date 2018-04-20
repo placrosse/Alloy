@@ -53,11 +53,16 @@ struct AlloyShell
 	struct AlloyScheme scheme;
 	/** The variable table for the shell.  */
 	struct AlloyVarTable *var_table;
+	/** The path to the current directory. */
+	char *current_path;
 };
 
 void alloy_shell_init(struct AlloyShell *shell);
 
 void alloy_shell_done(struct AlloyShell *shell);
+
+int alloy_shell_chdir(struct AlloyShell *shell,
+                      const char *path);
 
 int alloy_shell_run(struct AlloyShell *shell);
 

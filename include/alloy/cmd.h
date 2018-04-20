@@ -30,6 +30,8 @@ enum AlloyCmdID
 {
 	/** Prints files to the standard output. */
 	ALLOY_CMD_CAT,
+	/** Changes the working directory. */
+	ALLOY_CMD_CD,
 	/** Clears the screen. */
 	ALLOY_CMD_CLEAR,
 	/** Colors a component of the terminal string. */
