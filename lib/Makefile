@@ -60,7 +60,7 @@ scanner.o: scanner.c scanner.h types.h errno.h
 
 scheme.o: scheme.c scheme.h color.h types.h
 
-shell.o: shell.c shell.h term.h input.h
+shell.o: shell.c shell.h term.h color.h scanner.h host.h heap.h cmd.h app.h string.h input.h
 
 string.o: string.c string.h types.h
 
