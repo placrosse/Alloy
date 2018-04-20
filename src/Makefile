@@ -3,18 +3,10 @@ CONFIG ?= default
 include $(TOP)/make/$(CONFIG)-config.mk
 include $(TOP)/make/patterns.mk
 
-BMFS_INCLUDE_DIR ?= /opt/return-infinity/include
-
-BMFS_LIB_DIR ?= /opt/return-infinity/lib
-
-CFLAGS += -I $(BMFS_INCLUDE_DIR)
-
-LDFLAGS += -L $(BMFS_LIB_DIR)
-
 VPATH += $(TOP)/include/alloy
 VPATH += $(TOP)/utils
 VPATH += $(TOP)/lib
-VPATH += $(BMFS_LIB_DIR)
+VPATH += $(PREFIX)/lib
 
 ifdef PLATFORM_linux
 objfiles += xterm.o

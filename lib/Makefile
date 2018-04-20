@@ -12,6 +12,7 @@ tests += heap-test
 targets += liballoy.a
 targets += $(tests)
 
+libfiles += app.o
 libfiles += cmd.o
 libfiles += color.o
 libfiles += heap.o
@@ -22,11 +23,14 @@ libfiles += scheme.o
 libfiles += shell.o
 libfiles += string.o
 libfiles += term.o
+libfiles += var.o
 
 .PHONY: all
 all: $(targets)
 
 liballoy.a: $(libfiles)
+
+app.o: app.c app.h types.h errno.h
 
 cmd.o: cmd.c cmd.h
 
@@ -50,11 +54,13 @@ scanner.o: scanner.c scanner.h types.h errno.h
 
 scheme.o: scheme.c scheme.h color.h types.h
 
-shell.o: shell.c shell.h term.h input.h
+shell.o: shell.c shell.h term.h color.h scanner.h host.h heap.h cmd.h app.h string.h input.h
 
 string.o: string.c string.h types.h
 
 term.o: term.c term.h
+
+var.o: var.c var.h types.h errno.h
 
 .PHONY: clean
 clean:
