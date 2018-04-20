@@ -118,6 +118,8 @@ void alloy_app_init(struct AlloyApp *app)
 	app->container.malloc = app_malloc;
 	app->container.realloc = app_realloc;
 	app->container.free = app_free;
+	app->entry = ALLOY_NULL;
+	app->exitcode = 0;
 }
 
 void alloy_app_set_host(struct AlloyApp *app,
@@ -133,4 +135,34 @@ void alloy_app_set_args(struct AlloyApp *app,
 {
 	app->container.argc = argc;
 	app->container.argv = argv;
+}
+
+int alloy_app_load(struct AlloyApp *app,
+                   const void *app_data_ptr,
+                   alloy_size app_size)
+{
+	const unsigned char *app_data = (const unsigned char *) app_data_ptr;
+
+	if ((app_size >= 4)
+	 && (app_data[0] == 0x7f)
+	 && (app_data[1] == 'E')
+	 && (app_data[2] == 'L')
+	 && (app_data[3] == 'F'))
+	{
+		return alloy_app_load_elf(app, app_data_ptr, app_size);
+	}
+	else
+	{
+		return alloy_app_load_bin(app, app_data_ptr, app_size);
+	}
+}
+
+int alloy_app_run(struct AlloyApp *app)
+{
+	if (app->entry == ALLOY_NULL)
+		return ALLOY_EFAULT;
+
+	app->exitcode = app->entry(&app->container);
+
+	return 0;
 }

@@ -8,6 +8,8 @@ endif (CMAKE_COMPILER_IS_GNUCC)
 
 add_library("alloy"
 	"app.c"
+	"app-bin.c"
+	"app-elf.c"
 	"cmd.c"
 	"color.c"
 	"heap.c"

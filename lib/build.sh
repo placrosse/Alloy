@@ -12,6 +12,8 @@ CFLAGS="${CFLAGS} -std=gnu99"
 CFLAGS="${CFLAGS} -g"
 
 $CC $CFLAGS -c app.c
+$CC $CFLAGS -c app-bin.c
+$CC $CFLAGS -c app-elf.c
 $CC $CFLAGS -c cmd.c
 $CC $CFLAGS -c color.c
 $CC $CFLAGS -c heap.c
@@ -27,4 +29,4 @@ $CC $CFLAGS -c var.c
 AR=ar
 ARFLAGS=rcs
 
-$AR $ARFLAGS liballoy.a app.o cmd.o color.o heap.o host.o input.o scanner.o scheme.o shell.o string.o term.o var.o
+$AR $ARFLAGS liballoy.a app.o app-bin.o app-elf.o cmd.o color.o heap.o host.o input.o scanner.o scheme.o shell.o string.o term.o var.o

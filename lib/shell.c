@@ -75,8 +75,8 @@ static int init_heap(struct AlloyShell *shell)
 
 	alloy_size page_size = host_info.page_size;
 
-	/* Give the heap 2MiB */
-	alloy_size heap_size = 2 * 1024 * 1024;
+	/* Give the heap 16MiB */
+	alloy_size heap_size = 16 * 1024 * 1024;
 
 	alloy_size heap_page_count = (heap_size + (page_size - 1)) / page_size;
 
@@ -826,6 +826,7 @@ static int cmd_external(struct AlloyShell *shell,
 	(void) cmd;
 	return ALLOY_ENOSYS;
 #endif
+
 	if (cmd->argc == 0)
 		return 0;
 
@@ -833,31 +834,43 @@ static int cmd_external(struct AlloyShell *shell,
 	if (app_file == ALLOY_NULL)
 		return ALLOY_ENOENT;
 
-	unsigned char *app_data = (unsigned char *) 0xffff800000000000;
+	struct AlloyHeap *heap = &shell->heap;
 
-	alloy_size app_pos = 0;
+	unsigned char *app_data = 0;
+	alloy_size app_size = 0;
+	alloy_size app_res = 0;
 
 	for (;;)
 	{
-		alloy_ssize read_size = shell_read(shell, app_file, &app_data[app_pos], 4096);
+		app_res += 4096;
+
+		unsigned char *tmp = alloy_heap_realloc(heap, app_data, app_res);
+		if (tmp == ALLOY_NULL)
+		{
+			alloy_heap_free(heap, app_data);
+			return ALLOY_ENOMEM;
+		}
+
+		app_data = tmp;
+
+		alloy_ssize read_size = shell_read(shell, app_file, &app_data[app_size], 4096);
 		if (read_size == 0)
 			break;
 		else if (read_size < 0)
 		{
+			alloy_heap_free(heap, app_data);
 			return ALLOY_EIO;
 		}
 
-		app_pos += (alloy_size) read_size;
+		app_size += (alloy_size) read_size;
 	}
 
 	shell_close(shell, app_file);
 
-	if (app_pos == 0)
+	if (app_size == 0)
 	{
 		return ALLOY_EINVAL;
 	}
-
-	alloy_app_entry entry = (alloy_app_entry) app_data;
 
 	struct AlloyAppHost app_host;
 	app_host.term = shell->term;
@@ -870,8 +883,17 @@ static int cmd_external(struct AlloyShell *shell,
 	alloy_app_set_host(&app, &app_host);
 	alloy_app_set_args(&app, cmd->argc, cmd->argv);
 
-	int exitcode = entry(&app.container);
-	if ((exitcode != 0) && !shell->interactive)
+	int err = alloy_app_load(&app, app_data, app_size);
+	if (err != 0)
+	{
+		alloy_heap_free(heap, app_data);
+		return err;
+	}
+
+	alloy_heap_free(heap, app_data);
+
+	err = alloy_app_run(&app);
+	if ((err != 0) && !shell->interactive)
 	{
 		/* TODO : fail out of a script. */
 		return 0;
@@ -962,8 +984,22 @@ static int shell_run_cmd(struct AlloyShell *shell)
 	case ALLOY_CMD_UNKNOWN:
 
 		err = cmd_external(shell, &cmd);
-		if (err != 0)
+		if (err == ALLOY_ENOMEM)
+		{
+			shell_write_z(shell, "Not enough memory available for application.\n");
+		}
+		else if (err == ALLOY_EIO)
+		{
+			shell_write_z(shell, "Failed reading application from disk.\n");
+		}
+		else if (err != ALLOY_ENOENT)
+		{
 			err = cmd_unknown(shell, &cmd);
+		}
+		else
+		{
+			shell_write_z(shell, "Failed to load application.\n");
+		}
 
 		break;
 	}
