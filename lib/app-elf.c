@@ -102,15 +102,11 @@ int alloy_app_load_elf(struct AlloyApp *app,
 			return ALLOY_EINVAL;
 
 		/* The the address of the program data. */
-		void *ph_data = (void *)(*((void **) &ph[8]));
-
-		/* Ensure that the data pointer isn't NULL. */
-		if (ph_data == ((void *) 0x00))
-			return ALLOY_EFAULT;
+		unsigned long int ph_offset = *((unsigned long int *) &ph[8]);
 
 		unsigned long int ph_size = (unsigned long int)(*((unsigned long int *) &ph[32]));
 
-		alloy_memcpy(ph_addr, ph_data, ph_size);
+		alloy_memcpy(ph_addr, &app_data[ph_offset], ph_size);
 	}
 
 	return 0;
