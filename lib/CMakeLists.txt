@@ -15,6 +15,7 @@ add_library("alloy"
 	"heap.c"
 	"host.c"
 	"input.c"
+	"path.c"
 	"scanner.c"
 	"scheme.c"
 	"shell.c"
@@ -33,6 +34,8 @@ add_alloy_test("cmd-test" "cmd-test.c")
 add_alloy_test("heap-test" "heap-test.c")
 
 add_alloy_test("input-test" "input-test.c")
+
+add_alloy_test("path-test" "path-test.c")
 
 add_alloy_test("scanner-test" "scanner-test.c")
 
