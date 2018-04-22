@@ -80,6 +80,52 @@ void alloy_path_done(struct AlloyPath *path)
 	path->name_count = 0;
 }
 
+int alloy_path_normalize(struct AlloyPath *path)
+{
+	alloy_size i = 0;
+
+	while (i < path->name_count)
+	{
+		char *name = path->names[i];
+		if (alloy_strcmp(name, ".") == 0)
+		{
+			alloy_heap_free(path->heap, name);
+			for (alloy_size j = i + 1; j < path->name_count; j++)
+			{
+				path->names[j - 1] = path->names[j];
+			}
+
+			path->name_count--;
+		}
+		else if (alloy_strcmp(name, "..") == 0)
+		{
+			alloy_heap_free(path->heap, name);
+			if (i == 0)
+			{
+				path->name_count--;
+				continue;
+			}
+
+			i--;
+
+			alloy_heap_free(path->heap, path->names[i]);
+
+			for (alloy_size j = i + 2; j < path->name_count; j++)
+			{
+				path->names[j - 2] = path->names[j];
+			}
+
+			path->name_count -= 2;
+		}
+		else
+		{
+			i++;
+		}
+	}
+
+	return 0;
+}
+
 int alloy_path_parse(struct AlloyPath *path,
                      const char *str,
                      alloy_size str_size)
@@ -121,4 +167,37 @@ int alloy_path_parse_z(struct AlloyPath *path,
                        const char *str)
 {
 	return alloy_path_parse(path, str, alloy_strlen(str));
+}
+
+char *alloy_path_to_string(struct AlloyPath *path,
+                           struct AlloyHeap *heap)
+{
+	char *str = ALLOY_NULL;
+
+	alloy_size str_size = 0;
+
+	for (alloy_size i = 0; i < path->name_count; i++)
+	{
+		alloy_size name_size = alloy_strlen(path->names[i]);
+
+		char *tmp = alloy_heap_realloc(heap, str, str_size + name_size + 2);
+		if (tmp == ALLOY_NULL)
+		{
+			alloy_heap_free(heap, str);
+			return ALLOY_NULL;
+		}
+
+		str = tmp;
+
+		str[str_size] = '/';
+
+		for (alloy_size j = 0; j < name_size; j++)
+			str[str_size + j + 1] = path->names[i][j];
+
+		str_size += name_size + 1;
+
+		str[str_size] = 0;
+	}
+
+	return str;
 }
