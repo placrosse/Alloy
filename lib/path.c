@@ -80,6 +80,12 @@ void alloy_path_done(struct AlloyPath *path)
 	path->name_count = 0;
 }
 
+int alloy_path_append(struct AlloyPath *path,
+                      const char *subpath_str)
+{
+	return alloy_path_parse_z(path, subpath_str);
+}
+
 int alloy_path_normalize(struct AlloyPath *path)
 {
 	alloy_size i = 0;

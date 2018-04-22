@@ -62,19 +62,16 @@ void alloy_path_init(struct AlloyPath *path,
 
 void alloy_path_done(struct AlloyPath *path);
 
-/** Mimics what happens to the working directory
- * path when a directory is changed. This function
- * does not normalize the path automatically. The
- * function @ref alloy_path_normalize will have to
- * be used to resolve all '.' and '..' references.
+/** Appends to the end of the path structure.
+ * The path that is appended is not normalized.
  * @param path An initialized path structure.
- * @param dir The directory path to "change" to.
+ * @param subpath_str The path string to append.
  * @returns Zero on success, an error code on failure.
  * @ingroup path-api
  * */
 
-int alloy_path_chdir(struct AlloyPath *path,
-                     const char *dir_path);
+int alloy_path_append(struct AlloyPath *path,
+                      const char *subpath_str);
 
 /** Resolves all references to '..' and '.'.
  * @param path An initialized path structure.
