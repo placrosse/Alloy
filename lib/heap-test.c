@@ -78,5 +78,38 @@ int main(void) {
 	assert(addr4[22] == '5');
 	assert(addr4[23] == '9');
 
+	/* Check that the other sections of memory are still valid. */
+	assert(check_mem(addr2, 32, 0x71) == 0);
+	assert(check_mem(addr3, 48, 0x02) == 0);
+
+	/* Free memory. */
+
+	alloy_heap_free(&heap, addr4);
+
+	/* Allocate more memory. */
+
+	unsigned char *addr5 = alloy_heap_malloc(&heap, 64);
+	assert(addr5 != ALLOY_NULL);
+	memset(addr5, 0x55, 64);
+
+	unsigned char *addr6 = alloy_heap_malloc(&heap, 55);
+	assert(addr6 != ALLOY_NULL);
+	memset(addr6, 0x31, 55);
+
+	/* Resize existing memory. */
+
+	unsigned char *addr7 = alloy_heap_realloc(&heap, addr2, 28);
+	assert(addr7 != ALLOY_NULL);
+
+	unsigned char *addr8 = alloy_heap_realloc(&heap, addr3, 32);
+	assert(addr8 != ALLOY_NULL);
+
+	/* Check consistency */
+
+	assert(check_mem(addr5, 64, 0x55) == 0);
+	assert(check_mem(addr6, 55, 0x31) == 0);
+	assert(check_mem(addr7, 28, 0x71) == 0);
+	assert(check_mem(addr8, 32, 0x02) == 0);
+
 	return EXIT_SUCCESS;
 }
