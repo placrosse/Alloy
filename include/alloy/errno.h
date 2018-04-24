@@ -48,4 +48,13 @@
 
 #define ALLOY_ENOENT 6
 
+/** The specified path is not a directory.
+ * This may happen when trying to open a
+ * directory that is actually a file, or
+ * opening a directory that doesn't exist.
+ * @ingroup errno
+ * */
+
+#define ALLOY_ENOTDIR 7
+
 #endif /* ALLOY_ERRNO_H */
