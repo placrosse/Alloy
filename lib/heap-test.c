@@ -111,5 +111,9 @@ int main(void) {
 	assert(check_mem(addr7, 28, 0x71) == 0);
 	assert(check_mem(addr8, 32, 0x02) == 0);
 
+	/* Check to ensure that failure works. */
+
+	assert(alloy_heap_malloc(&heap, 512) == ALLOY_NULL);
+
 	return EXIT_SUCCESS;
 }
