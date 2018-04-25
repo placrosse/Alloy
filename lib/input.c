@@ -43,6 +43,7 @@ void alloy_input_init(struct AlloyInput *input)
 	input->buf_pos = 0;
 	input->buf_res = 0;
 	input->x_bias = 0;
+	input->tab_width = 8;
 }
 
 void alloy_input_done(struct AlloyInput *input)
@@ -136,7 +137,9 @@ int alloy_input_insert(struct AlloyInput *input, char c)
 {
 	if ((input->buf_pos + 1) >= input->buf_res)
 	{
-		alloy_size new_size = ((input->buf_pos + 63) / 64) * 64;
+		alloy_size new_size = input->buf_pos + 64;
+		/* Round to nearest 64 */
+		new_size = ((new_size + 63) / 64) * 64;
 
 		int err = alloy_input_reserve(input, new_size);
 		if (err != 0)
