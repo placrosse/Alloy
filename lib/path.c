@@ -80,10 +80,66 @@ void alloy_path_done(struct AlloyPath *path)
 	path->name_count = 0;
 }
 
+void alloy_path_reset(struct AlloyPath *path)
+{
+	if (path->heap == ALLOY_NULL)
+		return;
+
+	/* TODO : find a way to reset the path
+	 * without removing all the allocations. */
+
+	for (alloy_size i = 0; i < path->name_count; i++)
+		alloy_heap_free(path->heap, path->names[i]);
+
+	alloy_heap_free(path->heap, path->names);
+
+	path->names = ALLOY_NULL;
+	path->name_count = 0;
+}
+
 int alloy_path_append(struct AlloyPath *path,
                       const char *subpath_str)
 {
 	return alloy_path_parse_z(path, subpath_str);
+}
+
+int alloy_path_copy(struct AlloyPath *dst_path,
+                    const struct AlloyPath *src_path)
+{
+	alloy_size name_count = src_path->name_count;
+
+	/* Free the existing allocates that are going to
+	 * be overwritten. */
+	for (alloy_size i = name_count; i < dst_path->name_count; i++)
+		alloy_heap_free(dst_path->heap, dst_path->names[i]);
+
+	char **names = alloy_heap_realloc(dst_path->heap, dst_path->names, name_count * sizeof(char *));
+	if (names == ALLOY_NULL)
+		return ALLOY_ENOMEM;
+
+	/* Zero any names that aren't initialized. */
+	for (alloy_size i = dst_path->name_count; i < name_count; i++)
+		names[i] = ALLOY_NULL;
+
+	dst_path->names = names;
+	dst_path->name_count = name_count;
+
+	for (alloy_size i = 0; i < src_path->name_count; i++)
+	{
+		alloy_size name_size = alloy_strlen(src_path->names[i]);
+
+		char *name = alloy_heap_realloc(dst_path->heap, dst_path->names[i], name_size + 1);
+		if (name == ALLOY_NULL)
+			return ALLOY_ENOMEM;
+
+		alloy_memcpy(name, src_path->names[i], name_size);
+
+		name[name_size] = 0;
+
+		dst_path->names[i] = name;
+	}
+
+	return 0;
 }
 
 int alloy_path_normalize(struct AlloyPath *path)
@@ -175,12 +231,15 @@ int alloy_path_parse_z(struct AlloyPath *path,
 	return alloy_path_parse(path, str, alloy_strlen(str));
 }
 
-char *alloy_path_to_string(struct AlloyPath *path,
+char *alloy_path_to_string(const struct AlloyPath *path,
                            struct AlloyHeap *heap)
 {
 	char *str = ALLOY_NULL;
 
 	alloy_size str_size = 0;
+
+	if (path->name_count == 0)
+		return alloy_strdup(heap, "/");
 
 	for (alloy_size i = 0; i < path->name_count; i++)
 	{

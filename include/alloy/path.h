@@ -62,6 +62,26 @@ void alloy_path_init(struct AlloyPath *path,
 
 void alloy_path_done(struct AlloyPath *path);
 
+/** Removes all existing data in the path.
+ * This function should be used instead
+ * of @ref alloy_path_done when the caller
+ * insteads to continue using the structure.
+ * @ingroup path-api
+ * */
+
+void alloy_path_reset(struct AlloyPath *path);
+
+/** Copies a path structure.
+ * @param dst_path The destination path structure.
+ * This structure should be initialized first.
+ * @param src_path The path structure to copy.
+ * @returns Zero on success, an error code on failure.
+ * @ingroup path-api
+ * */
+
+int alloy_path_copy(struct AlloyPath *dst_path,
+                    const struct AlloyPath *src_path);
+
 /** Appends to the end of the path structure.
  * The path that is appended is not normalized.
  * @param path An initialized path structure.
@@ -112,7 +132,7 @@ int alloy_path_parse_z(struct AlloyPath *path,
  * @ingroup path-api
  * */
 
-char *alloy_path_to_string(struct AlloyPath *path,
+char *alloy_path_to_string(const struct AlloyPath *path,
                            struct AlloyHeap *heap);
 
 #ifdef __cplusplus
