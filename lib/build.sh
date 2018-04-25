@@ -19,6 +19,7 @@ $CC $CFLAGS -c color.c
 $CC $CFLAGS -c heap.c
 $CC $CFLAGS -c host.c
 $CC $CFLAGS -c input.c
+$CC $CFLAGS -c path.c
 $CC $CFLAGS -c scanner.c
 $CC $CFLAGS -c scheme.c
 $CC $CFLAGS -c shell.c
@@ -29,4 +30,4 @@ $CC $CFLAGS -c var.c
 AR=ar
 ARFLAGS=rcs
 
-$AR $ARFLAGS liballoy.a app.o app-bin.o app-elf.o cmd.o color.o heap.o host.o input.o scanner.o scheme.o shell.o string.o term.o var.o
+$AR $ARFLAGS liballoy.a app.o app-bin.o app-elf.o cmd.o color.o heap.o host.o input.o path.o scanner.o scheme.o shell.o string.o term.o var.o
