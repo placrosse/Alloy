@@ -30,7 +30,17 @@ int main(void)
 
 	alloy_shell_set_term(&shell, &alloy_term);
 
-	int err = alloy_shell_run(&shell);
+	int err = 0;
+
+#ifdef ALLOY_WITH_BAREMETAL
+	err = alloy_shell_chdir(&shell, "/Home");
+	if (err != 0)
+	{
+		alloy_shell_done(&shell);
+		return EXIT_FAILURE;
+	}
+#endif
+	err = alloy_shell_run(&shell);
 	if (err != 0)
 	{
 		alloy_shell_done(&shell);
