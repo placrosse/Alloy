@@ -186,6 +186,13 @@ enum AlloyCmdID alloy_cmd_id_parse(const char *cmd, alloy_size cmd_len)
 	 && (cmd[6] == 'n'))
 		return ALLOY_CMD_VERSION;
 
+	if ((cmd_len == 4)
+	 && (cmd[0] == 'q')
+	 && (cmd[1] == 'u')
+	 && (cmd[2] == 'i')
+	 && (cmd[3] == 't'))
+		return ALLOY_CMD_EXIT;
+
 	return ALLOY_CMD_UNKNOWN;
 }
 
