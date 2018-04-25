@@ -20,6 +20,7 @@ extern "C"
 struct AlloyHost;
 struct AlloyHostData;
 struct AlloyInput;
+struct AlloyPath;
 struct AlloyTerm;
 struct AlloyTermData;
 
@@ -54,7 +55,7 @@ struct AlloyShell
 	/** The variable table for the shell.  */
 	struct AlloyVarTable *var_table;
 	/** The path to the current directory. */
-	char *current_path;
+	struct AlloyPath *path;
 };
 
 void alloy_shell_init(struct AlloyShell *shell);

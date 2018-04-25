@@ -13,6 +13,7 @@
 #include <alloy/keys.h>
 #include <alloy/host.h>
 #include <alloy/input.h>
+#include <alloy/path.h>
 #include <alloy/scanner.h>
 #include <alloy/string.h>
 #include <alloy/term.h>
@@ -84,7 +85,7 @@ static int init_heap(struct AlloyShell *shell)
 	if (heap == ALLOY_NULL)
 		return ALLOY_ENOMEM;
 
-	err = alloy_heap_init(&shell->heap, heap, heap_page_count * page_size);
+	err = alloy_heap_init(&shell->heap, heap, heap_size);
 	if (err != 0)
 		return err;
 
@@ -131,6 +132,24 @@ static int init_input(struct AlloyShell *shell)
 	return 0;
 }
 
+static int init_path(struct AlloyShell *shell)
+{
+	if (shell->path != ALLOY_NULL)
+		return 0;
+
+	int err = init_heap(shell);
+	if (err != 0)
+		return err;
+
+	shell->path = alloy_heap_malloc(&shell->heap, sizeof(struct AlloyPath));
+	if (shell->path == ALLOY_NULL)
+		return ALLOY_ENOMEM;
+
+	alloy_path_init(shell->path, &shell->heap);
+
+	return 0;
+}
+
 static int init_var_table(struct AlloyShell *shell)
 {
 	if (shell->var_table != ALLOY_NULL)
@@ -147,6 +166,47 @@ static int init_var_table(struct AlloyShell *shell)
 	alloy_var_table_init(shell->var_table, &shell->heap);
 
 	return 0;
+}
+
+static char *shell_resolve_path(struct AlloyShell *shell,
+                                const char *path_in)
+{
+	int err = init_heap(shell);
+	if (err != 0)
+		return ALLOY_NULL;
+
+	err = init_path(shell);
+	if (err != 0)
+		return ALLOY_NULL;
+
+	if ((path_in == ALLOY_NULL)
+	 || (path_in[0] == '/')
+	 || (path_in[0] == '\\'))
+		return alloy_strdup(&shell->heap, "/");
+
+	struct AlloyPath path;
+
+	alloy_path_init(&path, &shell->heap);
+
+	err = alloy_path_copy(&path, shell->path);
+	if (err != 0)
+	{
+		alloy_path_done(&path);
+		return ALLOY_NULL;
+	}
+
+	err = alloy_path_append(&path, path_in);
+	if (err != 0)
+	{
+		alloy_path_done(&path);
+		return ALLOY_NULL;
+	}
+
+	char *path_out = alloy_path_to_string(&path, &shell->heap);
+
+	alloy_path_done(&path);
+
+	return path_out;
 }
 
 static char *shell_append(struct AlloyShell *shell,
@@ -461,9 +521,17 @@ static int shell_get_line(struct AlloyShell *shell)
 }
 
 static struct AlloyDir *shell_opendir(struct AlloyShell *shell,
-                                      const char *path)
+                                      const char *path_in)
 {
-	return alloy_host_opendir(shell->host, shell->host_data, path);
+	char *path = shell_resolve_path(shell, path_in);
+	if (path == ALLOY_NULL)
+		return ALLOY_NULL;
+
+	struct AlloyDir *dir = alloy_host_opendir(shell->host, shell->host_data, path);
+
+	alloy_heap_free(&shell->heap, path);
+
+	return dir;
 }
 
 static struct AlloyDirEnt *shell_readdir(struct AlloyShell *shell,
@@ -525,6 +593,10 @@ static int shell_try_assignment(struct AlloyShell *shell)
 	if (err != 0)
 		return err;
 
+	err = init_input(shell);
+	if (err != 0)
+		return err;
+
 	struct AlloyScanner scanner;
 
 	alloy_scanner_init(&scanner);
@@ -574,10 +646,18 @@ static int shell_try_assignment(struct AlloyShell *shell)
 }
 
 static struct AlloyFile *shell_open(struct AlloyShell *shell,
-                                    const char *path,
+                                    const char *path_in,
                                     enum AlloyFileMode mode)
 {
-	return alloy_host_open(shell->host, shell->host_data, path, mode);
+	char *path = shell_resolve_path(shell, path_in);
+	if (path == ALLOY_NULL)
+		return ALLOY_NULL;
+
+	struct AlloyFile *file = alloy_host_open(shell->host, shell->host_data, path, mode);
+
+	alloy_heap_free(&shell->heap, path);
+
+	return file;
 }
 
 static void shell_close(struct AlloyShell *shell,
@@ -622,6 +702,7 @@ static int cmd_help(struct AlloyShell *shell)
 {
 	shell_write_z(shell, "Commands:\n");
 	cmd_help_print_cmd(shell, "cat    ", "Print file contents to screen.");
+	cmd_help_print_cmd(shell, "cd     ", "Change the working directory.");
 	cmd_help_print_cmd(shell, "clear  ", "Clear the screen.");
 	cmd_help_print_cmd(shell, "color  ", "Color a component of the terminal.");
 	cmd_help_print_cmd(shell, "dir    ", "List directory contents.");
@@ -673,7 +754,8 @@ static int cmd_cd(struct AlloyShell *shell,
 
 	if (cmd->argc < 2)
 	{
-		path = "/Home";
+		shell_write_z(shell, "Missing directory path.\n");
+		return ALLOY_EINVAL;
 	}
 	else if (cmd->argc > 2)
 	{
@@ -694,6 +776,7 @@ static int cmd_cd(struct AlloyShell *shell,
 		shell_write_z(shell, path);
 		shell_write_z(shell, "'");
 		shell_set_foreground(shell, &shell->scheme.normal_foreground);
+		shell_write_z(shell, "\n");
 		return err;
 	}
 
@@ -785,10 +868,16 @@ static int cmd_color(struct AlloyShell *shell,
 static int cmd_dir(struct AlloyShell *shell,
                    struct AlloyCmd *cmd)
 {
-	const char *path = "/";
+	int err = init_path(shell);
+	if (err != 0)
+		return err;
+
+	const char *path = ".";
 
 	if (cmd->argc > 1)
 		path = cmd->argv[1];
+
+	/* Open the directory. */
 
 	alloy_bool list_all = ALLOY_FALSE;
 
@@ -1046,20 +1135,138 @@ static int shell_run_cmd(struct AlloyShell *shell)
 	return err;
 }
 
+static alloy_bool shell_dir_exists(struct AlloyShell *shell,
+                                   const struct AlloyPath *path)
+{
+	char *path_str = alloy_path_to_string(path, &shell->heap);
+	if (path_str == ALLOY_NULL)
+		return ALLOY_FALSE;
+
+	struct AlloyDir *dir = shell_opendir(shell, path_str);
+	if (dir == ALLOY_NULL)
+	{
+		alloy_heap_free(&shell->heap, path_str);
+		return ALLOY_FALSE;
+	}
+
+	shell_closedir(shell, dir);
+
+	alloy_heap_free(&shell->heap, path_str);
+
+	return ALLOY_TRUE;
+}
+
+static void shell_bad_dir(struct AlloyShell *shell,
+                          const struct AlloyPath *path)
+{
+	char *path_str = alloy_path_to_string(path, &shell->heap);
+	if (path_str != ALLOY_NULL)
+	{
+		shell_write_z(shell, "No such directory ");
+		shell_set_foreground(shell, &shell->scheme.string_literal);
+		shell_write_z(shell, "'");
+		shell_write_z(shell, path_str);
+		shell_write_z(shell, "'");
+		shell_set_foreground(shell, &shell->scheme.normal_foreground);
+		shell_write_z(shell, "\n");
+	}
+
+	alloy_heap_free(&shell->heap, path_str);
+}
+
 static int shell_chdir_abs(struct AlloyShell *shell,
                            const char *path)
 {
-	(void) shell;
-	(void) path;
-	return ALLOY_ENOSYS;
+	int err = init_path(shell);
+	if (err != 0)
+		return err;
+
+	struct AlloyPath next_path;
+
+	alloy_path_init(&next_path, &shell->heap);
+
+	err = alloy_path_parse_z(&next_path, path);
+	if (err != 0)
+	{
+		alloy_path_done(&next_path);
+		return err;
+	}
+
+	err = alloy_path_normalize(&next_path);
+	if (err != 0)
+	{
+		alloy_path_done(&next_path);
+		return err;
+	}
+
+	if (!shell_dir_exists(shell, &next_path))
+	{
+		shell_bad_dir(shell, &next_path);
+		alloy_path_done(&next_path);
+		return ALLOY_ENOTDIR;
+	}
+
+	err = alloy_path_copy(shell->path, &next_path);
+	if (err != 0)
+	{
+		alloy_path_done(&next_path);
+		return err;
+	}
+
+	alloy_path_done(&next_path);
+
+	return 0;
 }
 
 static int shell_chdir_rel(struct AlloyShell *shell,
                            const char *path)
 {
-	(void) shell;
-	(void) path;
-	return ALLOY_ENOSYS;
+	int err = init_path(shell);
+	if (err != 0)
+		return err;
+
+	struct AlloyPath next_path;
+
+	alloy_path_init(&next_path, &shell->heap);
+
+	err = alloy_path_copy(&next_path, shell->path);
+	if (err != 0)
+	{
+		alloy_path_done(&next_path);
+		return err;
+	}
+
+	err = alloy_path_append(&next_path, path);
+	if (err != 0)
+	{
+		alloy_path_done(&next_path);
+		return err;
+	}
+
+	err = alloy_path_normalize(&next_path);
+	if (err != 0)
+	{
+		alloy_path_done(&next_path);
+		return err;
+	}
+
+	if (!shell_dir_exists(shell, &next_path))
+	{
+		shell_bad_dir(shell, &next_path);
+		alloy_path_done(&next_path);
+		return ALLOY_ENOTDIR;
+	}
+
+	err = alloy_path_copy(shell->path, &next_path);
+	if (err != 0)
+	{
+		alloy_path_done(&next_path);
+		return err;
+	}
+
+	alloy_path_done(&next_path);
+
+	return 0;
 }
 
 void alloy_shell_init(struct AlloyShell *shell)
@@ -1073,12 +1280,19 @@ void alloy_shell_init(struct AlloyShell *shell)
 	shell->input = ALLOY_NULL;
 	shell->var_table = ALLOY_NULL;
 	shell->interactive = ALLOY_TRUE;
-	shell->current_path = ALLOY_NULL;
+	shell->path = ALLOY_NULL;
 	alloy_scheme_init(&shell->scheme);
 }
 
 void alloy_shell_done(struct AlloyShell *shell)
 {
+	if (shell->path != ALLOY_NULL)
+	{
+		alloy_path_done(shell->path);
+		alloy_heap_free(&shell->heap, shell->path);
+		shell->path = ALLOY_NULL;
+	}
+
 	if (shell->input != ALLOY_NULL)
 	{
 		alloy_input_done(shell->input);
