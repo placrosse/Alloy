@@ -202,6 +202,13 @@ static char *shell_resolve_path(struct AlloyShell *shell,
 		return ALLOY_NULL;
 	}
 
+	err = alloy_path_normalize(&path);
+	if (err != 0)
+	{
+		alloy_path_done(&path);
+		return ALLOY_NULL;
+	}
+
 	char *path_out = alloy_path_to_string(&path, &shell->heap);
 
 	alloy_path_done(&path);
