@@ -9,6 +9,34 @@
 
 #include <alloy/errno.h>
 
+static void sort_heap(struct AlloyHeap *heap)
+{
+	for (;;)
+	{
+		alloy_bool sorted = ALLOY_FALSE;
+
+		for (alloy_size i = 0; (i + 1) < heap->entry_count; i++)
+		{
+			struct AlloyHeapEnt *a = &heap->entries[i];
+			struct AlloyHeapEnt *b = &heap->entries[i + 1];
+			if (a->addr > b->addr)
+			{
+				struct AlloyHeapEnt tmp;
+				tmp.addr = a->addr;
+				tmp.size = a->size;
+				a->addr = b->addr;
+				a->size = b->size;
+				b->addr = tmp.addr;
+				b->size = tmp.size;
+				sorted = ALLOY_TRUE;
+			}
+		}
+
+		if (!sorted)
+			break;
+	}
+}
+
 static void *find_region(struct AlloyHeap *heap,
                          alloy_size size)
 {
@@ -56,7 +84,9 @@ static struct AlloyHeapEnt *make_ent(struct AlloyHeap *heap)
 	heap->entries[heap->entry_count - 1].addr = ALLOY_NULL;
 	heap->entries[heap->entry_count - 1].size = 0;
 
-	return &heap->entries[heap->entry_count - 1];
+	sort_heap(heap);
+
+	return &heap->entries[0];
 }
 
 static struct AlloyHeapEnt *find_ent(struct AlloyHeap *heap,
@@ -70,34 +100,6 @@ static struct AlloyHeapEnt *find_ent(struct AlloyHeap *heap,
 	}
 
 	return ALLOY_NULL;
-}
-
-static void sort_heap(struct AlloyHeap *heap)
-{
-	for (;;)
-	{
-		alloy_bool sorted = ALLOY_FALSE;
-
-		for (alloy_size i = 0; (i + 1) < heap->entry_count; i++)
-		{
-			struct AlloyHeapEnt *a = &heap->entries[i];
-			struct AlloyHeapEnt *b = &heap->entries[i + 1];
-			if (a->addr > b->addr)
-			{
-				struct AlloyHeapEnt tmp;
-				tmp.addr = a->addr;
-				tmp.size = a->size;
-				a->addr = b->addr;
-				a->size = b->size;
-				b->addr = tmp.addr;
-				b->size = tmp.size;
-				sorted = ALLOY_TRUE;
-			}
-		}
-
-		if (!sorted)
-			break;
-	}
 }
 
 int alloy_heap_init(struct AlloyHeap *heap,
