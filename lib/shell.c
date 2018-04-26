@@ -716,6 +716,7 @@ static int cmd_help(struct AlloyShell *shell)
 	cmd_help_print_cmd(shell, "echo   ", "Echo content to the standard output.");
 	cmd_help_print_cmd(shell, "exit   ", "Exit the shell.");
 	cmd_help_print_cmd(shell, "help   ", "Get help with a command.");
+	cmd_help_print_cmd(shell, "scheme ", "Set the color scheme of the terminal.");
 	cmd_help_print_cmd(shell, "version", "Print this version of Alloy.");
 	return 0;
 }
@@ -1032,6 +1033,42 @@ static int cmd_external(struct AlloyShell *shell,
 	return 0;
 }
 
+static int cmd_scheme(struct AlloyShell *shell,
+                      struct AlloyCmd *cmd)
+{
+	if (cmd->argc < 2)
+	{
+		shell_write_z(shell, "No color scheme specified.\n");
+		shell_write_z(shell, "Available color schemes:\n");
+		shell_write_z(shell, "  * oceanic-next\n");
+		shell_write_z(shell, "  * molokai\n");
+		return ALLOY_EINVAL;
+	}
+
+	const char *scheme = cmd->argv[1];
+
+	if (alloy_strcmp(scheme, "molokai") == 0)
+	{
+		alloy_memcpy(&shell->scheme, &alloy_scheme_molokai, sizeof(struct AlloyScheme));
+	}
+	else if (alloy_strcmp(scheme, "oceanic-next") == 0)
+	{
+		alloy_memcpy(&shell->scheme, &alloy_scheme_oceanic_next, sizeof(struct AlloyScheme));
+	}
+	else
+	{
+		shell_write_z(shell, "Unknown color scheme ");
+		shell_set_foreground(shell, &shell->scheme.string_literal);
+		shell_write_z(shell, "'");
+		shell_write_z(shell, scheme);
+		shell_write_z(shell, "'");
+		shell_set_foreground(shell, &shell->scheme.normal_foreground);
+		shell_write_z(shell, "\n");
+	}
+
+	return 0;
+}
+
 static int cmd_unknown(struct AlloyShell *shell,
                        struct AlloyCmd *cmd)
 {
@@ -1107,6 +1144,9 @@ static int shell_run_cmd(struct AlloyShell *shell)
 		break;
 	case ALLOY_CMD_ECHO:
 		err = cmd_echo(shell, &cmd);
+		break;
+	case ALLOY_CMD_SCHEME:
+		err = cmd_scheme(shell, &cmd);
 		break;
 	case ALLOY_CMD_VERSION:
 		err = cmd_version(shell);

@@ -7,45 +7,31 @@
 
 #include <alloy/scheme.h>
 
-/* The default scheme is based on this molokai scheme:
- *  - 0x272822
- *  - 0xf92672
- *  - 0x66d9ef
- *  - 0xa6e22e
- *  - 0xfd971f
- * */
+#include <alloy/string.h>
 
 void alloy_scheme_init(struct AlloyScheme *scheme)
 {
-	scheme->cmd_builtin.red = 0xf9;
-	scheme->cmd_builtin.green = 0x26;
-	scheme->cmd_builtin.blue = 0x72;
-
-	scheme->cmd_external.red = 0xf9;
-	scheme->cmd_external.green = 0x26;
-	scheme->cmd_external.blue = 0x72;
-
-	scheme->normal_foreground.red = 0xff;
-	scheme->normal_foreground.green = 0xff;
-	scheme->normal_foreground.blue = 0xff;
-
-	scheme->normal_background.red = 0x27;
-	scheme->normal_background.green = 0x28;
-	scheme->normal_background.blue = 0x22;
-
-	scheme->string_literal.red = 0xa6;
-	scheme->string_literal.green = 0xe2;
-	scheme->string_literal.blue = 0x2e;
-
-	scheme->numerical.red = 0xfd;
-	scheme->numerical.green = 0x97;
-	scheme->numerical.blue = 0x1f;
-
-	scheme->comment.red = 0x66;
-	scheme->comment.green = 0xd9;
-	scheme->comment.blue = 0xef;
-
-	scheme->error.red = 0xba;
-	scheme->error.green = 0x49;
-	scheme->error.blue = 0x2c;
+	alloy_memcpy(scheme, &alloy_scheme_oceanic_next, sizeof(struct AlloyScheme));
 }
+
+const struct AlloyScheme alloy_scheme_molokai = {
+	{ 0xf9, 0x26, 0x72 } /* cmd builtin */,
+	{ 0xf9, 0x26, 0x72 } /* cmd external */,
+	{ 0x27, 0x28, 0x22 } /* normal background */,
+	{ 0xff, 0xff, 0xff } /* normal foreground */,
+	{ 0xa6, 0xe2, 0x2e } /* string literal */,
+	{ 0xfd, 0x97, 0x1f } /* numerical */,
+	{ 0x66, 0xd9, 0xef } /* comment */,
+	{ 0xba, 0x49, 0x2c } /* error */
+};
+
+const struct AlloyScheme alloy_scheme_oceanic_next = {
+	{ 0xec, 0x5f, 0x67 } /* cmd builtin */,
+	{ 0xec, 0x5f, 0x67 } /* cmd external */,
+	{ 0x1b, 0x2b, 0x34 } /* normal background */,
+	{ 0xff, 0xff, 0xff } /* normal foreground */,
+	{ 0x99, 0xc7, 0x94 } /* string literal */,
+	{ 0xf9, 0x91, 0x57 } /* numerical */,
+	{ 0x5f, 0xb3, 0xb3 } /* comment */,
+	{ 0xff, 0xff, 0xff } /* error */
+};

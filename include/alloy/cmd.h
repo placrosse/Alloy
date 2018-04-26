@@ -36,6 +36,8 @@ enum AlloyCmdID
 	ALLOY_CMD_CLEAR,
 	/** Colors a component of the terminal string. */
 	ALLOY_CMD_COLOR,
+	/** Sets the color scheme of the session. */
+	ALLOY_CMD_SCHEME,
 	/** List directory contents. */
 	ALLOY_CMD_DIR,
 	/** Writes to the standard output. */

@@ -52,6 +52,18 @@ struct AlloyScheme
 
 void alloy_scheme_init(struct AlloyScheme *scheme);
 
+/** The Molokai color scheme for Alloy.
+ * @ingroup scheme-api
+ * */
+
+extern const struct AlloyScheme alloy_scheme_molokai;
+
+/** The Oceanic Next color scheme for Alloy.
+ * @ingroup scheme-api
+ * */
+
+extern const struct AlloyScheme alloy_scheme_oceanic_next;
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

@@ -16,17 +16,47 @@
 #define ALLOY_STDOUT 1
 #define ALLOY_STDERR 2
 
+static int app_read_stdin(void *buf,
+                          unsigned int len,
+                          struct AlloyAppHost *app_host)
+{
+	alloy_utf8 *buf8 = (alloy_utf8 *) buf;
+
+	for (unsigned int i = 0; i < len; i++)
+	{
+		alloy_utf8 c = 0;
+
+		int err = alloy_term_get_char(app_host->term,
+		                              app_host->term_data,
+		                              &c);
+		if (err != 0)
+			return err;
+
+		buf8[i] = c;
+	}
+
+	return len;
+}
+
 static int app_read(int fd,
                     void *buf,
                     unsigned int len,
                     struct AlloyAppHost *app_host)
 {
-	(void) app_host;
-	(void) fd;
-	(void) buf;
-	(void) len;
-	/* Not implemented yet. */
-	return ALLOY_ENOSYS;
+	if (fd == ALLOY_STDIN)
+	{
+		if (app_host->term == ALLOY_NULL)
+			return -1;
+
+		return app_read_stdin(buf, len, app_host);
+	}
+	else
+	{
+		/* Not implemented yet. */
+		return -1;
+	}
+
+	return (int) len;
 }
 
 static int app_write(int fd,
@@ -55,7 +85,7 @@ static int app_write(int fd,
 		return -1;
 	}
 
-	return 0;
+	return (int) len;
 }
 
 static int app_open(const char *path,
