@@ -17,7 +17,7 @@ OBJCOPY=${CROSS_COMPILE}objcopy
 NASM=nasm
 
 function convert_to_binary {
-	echo "OBJCOPY ${PWD}/$2"
+	echo " OBJCOPY ${PWD}/$2"
 	$OBJCOPY $1 $2
 }
 
