@@ -2,36 +2,53 @@
 
 set -e
 
+source "../bash/common.sh"
+
 ../utils/alloy-font-generator
 
-CC=gcc
-CFLAGS="$CFLAGS -Wall -Wextra -Werror -Wfatal-errors -g"
-CFLAGS="$CFLAGS -fomit-frame-pointer -fno-stack-protector -mno-red-zone"
-CFLAGS="$CFLAGS -I ../include"
-CFLAGS="$CFLAGS -std=gnu99"
-CFLAGS="$CFLAGS -g"
+CFLAGS="${CFLAGS} -fomit-frame-pointer"
+CFLAGS="${CFLAGS} -fno-stack-protector"
+CFLAGS="${CFLAGS} -mno-red-zone"
 
-OBJCOPY=objcopy
+LDFLAGS="${LDFLAGS} -L ../lib"
+LDLIBS="${LDLIBS} -lalloy"
+
+OBJCOPY=${CROSS_COMPILE}objcopy
 NASM=nasm
 
-$CC $CFLAGS -c alloy.c
+function convert_to_binary {
+	echo "OBJCOPY ${PWD}/$2"
+	$OBJCOPY $1 $2
+}
+
+compile_file alloy.c
 
 if [ -z ${ALLOY_WITH_BAREMETAL+x} ]; then
-	LD=gcc
-	LDFLAGS=
-	$CC $CFLAGS -c xterm.c
-	$CC $CFLAGS -c host-linux.c
-	$LD $LDFLAGS -o alloy xterm.o host-linux.o alloy.o ../lib/liballoy.a
+	compile_file "xterm.c"
+	compile_file "host-linux.c"
+	link_executable "alloy" \
+		"alloy.o" \
+		"host-linux.o" \
+		"xterm.o"
 else
-	CFLAGS="$CFLAGS -nostdinc"
-	CFLAGS="$CFLAGS -nodefaultlibs"
-	CFLAGS="$CFLAGS -DALLOY_WITH_BAREMETAL=1"
-	LD=ld
-	LDFLAGS="$LDFLAGS -nostdlib -nostartfiles -nodefaultlibs -T alloy.ld"
-	$CC $CFLAGS -c font.c
-	$CC $CFLAGS -c -O3 vesaterm.c
-	$CC $CFLAGS -c host-baremetal.c
-	$LD $LDFLAGS -o alloy alloy.o font.o vesaterm.o host-baremetal.o ../lib/liballoy.a "$BMFS_LIBRARY"
+	CFLAGS="${CFLAGS} -nostdinc"
+	CFLAGS="${CFLAGS} -nodefaultlibs"
+	CFLAGS="${CFLAGS} -DALLOY_WITH_BAREMETAL=1"
+	LD=${CROSS_COMPILE}ld
+	LDLIBS="${LDLIBS} ${BMFS_LIBRARY}"
+	LDFLAGS="${LDFLAGS} -nostdlib"
+	LDFLAGS="${LDFLAGS} -nostartfiles"
+	LDFLAGS="${LDFLAGS} -nodefaultlibs"
+	LDFLAGS="${LDFLAGS} -T alloy.ld"
+	compile_file "font.c"
+	compile_file "vesaterm.c"
+	compile_file "host-baremetal.c"
+	link_executable "alloy" \
+		"alloy.o" \
+		"font.o" \
+		"vesaterm.o" \
+		"host-baremetal.o"
+	convert_to_binary "alloy" "alloy.bin"
 	$OBJCOPY -O binary alloy alloy.bin
 fi
 

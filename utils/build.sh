@@ -1,9 +1,12 @@
 #!/bin/bash
 
 set -e
-set -u
 
-CC=gcc
-CFLAGS="-Wall -Wextra -Werror -Wfatal-errors -g -std=gnu99"
+source ../bash/common.sh
 
-$CC $CFLAGS alloy-font-generator.c -o alloy-font-generator `pkg-config --cflags --libs freetype2`
+CFLAGS="${CFLAGS} `pkg-config --cflags freetype2`"
+compile_file alloy-font-generator.c
+
+LDLIBS="${LDLIBS} `pkg-config --libs freetype2`"
+link_executable "alloy-font-generator" \
+	"alloy-font-generator.o"

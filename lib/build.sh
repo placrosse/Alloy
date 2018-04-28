@@ -1,33 +1,42 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
-CC=gcc
-CFLAGS="${CFLAGS} -Wall -Wextra -Werror -Wfatal-errors"
+source "../bash/common.sh"
+
 CFLAGS="${CFLAGS} -fno-stack-protector"
 CFLAGS="${CFLAGS} -fomit-frame-pointer"
 CFLAGS="${CFLAGS} -mno-red-zone"
-CFLAGS="${CFLAGS} -I ../include"
-CFLAGS="${CFLAGS} -std=gnu99"
-CFLAGS="${CFLAGS} -g"
 
-$CC $CFLAGS -c app.c
-$CC $CFLAGS -c app-bin.c
-$CC $CFLAGS -c app-elf.c
-$CC $CFLAGS -c cmd.c
-$CC $CFLAGS -c color.c
-$CC $CFLAGS -c heap.c
-$CC $CFLAGS -c host.c
-$CC $CFLAGS -c input.c
-$CC $CFLAGS -c path.c
-$CC $CFLAGS -c scanner.c
-$CC $CFLAGS -c scheme.c
-$CC $CFLAGS -c shell.c
-$CC $CFLAGS -c string.c
-$CC $CFLAGS -c term.c
-$CC $CFLAGS -c var.c
+compile_file "app.c"
+compile_file "app-bin.c"
+compile_file "app-elf.c"
+compile_file "cmd.c"
+compile_file "color.c"
+compile_file "heap.c"
+compile_file "host.c"
+compile_file "input.c"
+compile_file "path.c"
+compile_file "scanner.c"
+compile_file "scheme.c"
+compile_file "shell.c"
+compile_file "string.c"
+compile_file "term.c"
+compile_file "var.c"
 
-AR=ar
-ARFLAGS=rcs
-
-$AR $ARFLAGS liballoy.a app.o app-bin.o app-elf.o cmd.o color.o heap.o host.o input.o path.o scanner.o scheme.o shell.o string.o term.o var.o
+link_static "liballoy.a" \
+	"app.o" \
+	"app-bin.o" \
+	"app-elf.o" \
+	"cmd.o" \
+	"color.o" \
+	"heap.o" \
+	"host.o" \
+	"input.o" \
+	"path.o" \
+	"scanner.o" \
+	"scheme.o" \
+	"shell.o" \
+	"string.o" \
+	"term.o" \
+	"var.o"

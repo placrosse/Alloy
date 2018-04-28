@@ -7,18 +7,15 @@ if [ ! -z ${ALLOY_WITH_BAREMETAL+x} ]; then
 	export CFLAGS
 fi
 
-cd fonts/source-code-pro
-./build.sh
-cd ../..
+function build_dir {
+	echo "Entering ${PWD}/$1"
+	original_dir="${PWD}"
+	cd $1
+	./build.sh
+	cd "${original_dir}"
+}
 
-cd utils
-./build.sh
-cd ..
-
-cd lib
-./build.sh
-cd ..
-
-cd src
-./build.sh
-cd ..
+build_dir "fonts/source-code-pro"
+build_dir "utils"
+build_dir "lib"
+build_dir "src"
