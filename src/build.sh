@@ -34,11 +34,10 @@ else
 	CFLAGS="${CFLAGS} -nostdinc"
 	CFLAGS="${CFLAGS} -nodefaultlibs"
 	CFLAGS="${CFLAGS} -DALLOY_WITH_BAREMETAL=1"
-	LD=${CROSS_COMPILE}ld
+	CFLAGS="${CFLAGS} -O3"
 	LDLIBS="${LDLIBS} ${BMFS_LIBRARY}"
 	LDFLAGS="${LDFLAGS} -nostdlib"
 	LDFLAGS="${LDFLAGS} -nostartfiles"
-	LDFLAGS="${LDFLAGS} -nodefaultlibs"
 	LDFLAGS="${LDFLAGS} -T alloy.ld"
 	compile_file "font.c"
 	compile_file "vesaterm.c"

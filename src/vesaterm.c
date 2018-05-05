@@ -34,6 +34,32 @@ struct AlloyTermData
 	alloy_uint8 *swap_buffer;
 };
 
+static void vesaterm_copy_swap(struct AlloyTermData *term)
+{
+	unsigned int j = 0;
+	unsigned int i = 0;
+	unsigned int size = term->x_res * term->y_res * 3;
+
+	alloy_uint64 *f64 = (alloy_uint64 *) term->frame_buffer;
+	const alloy_uint64 *s64 = (const alloy_uint64 *) term->swap_buffer;
+
+	while ((i < size) && ((i + 15) < size)) {
+
+		f64[j] = s64[j];
+		j++;
+
+		f64[j] = s64[j];
+		j++;
+
+		i += 8;
+	}
+
+	while (i < size) {
+		term->frame_buffer[i] = term->swap_buffer[i];
+		i++;
+	}
+}
+
 static int vesaterm_invert(struct AlloyTermData *term,
                            const struct AlloyTermPos *pos)
 {
@@ -73,11 +99,9 @@ static int vesaterm_invert(struct AlloyTermData *term,
 
 static int vesaterm_scroll_down(struct AlloyTermData *term)
 {
-	unsigned char *dst = (unsigned char *) term->frame_buffer;
+	unsigned char *dst = (unsigned char *) term->swap_buffer;
 
-	unsigned char *dst_swap = (unsigned char *) term->swap_buffer;
-
-	unsigned char *src = &dst_swap[alloy_font.line_height * term->x_res * term->depth / 8];
+	unsigned char *src = &dst[alloy_font.line_height * term->x_res * term->depth / 8];
 
 	for (unsigned int y = 0; y < (term->y_res - alloy_font.line_height); y++)
 	{
@@ -91,12 +115,10 @@ static int vesaterm_scroll_down(struct AlloyTermData *term)
 			dst[buf_offset + 0] = src[buf_offset + 0];
 			dst[buf_offset + 1] = src[buf_offset + 1];
 			dst[buf_offset + 2] = src[buf_offset + 2];
-
-			dst_swap[buf_offset + 0] = src[buf_offset + 0];
-			dst_swap[buf_offset + 1] = src[buf_offset + 1];
-			dst_swap[buf_offset + 2] = src[buf_offset + 2];
 		}
 	}
+
+	vesaterm_copy_swap(term);
 
 	return alloy_term_clear_line(&alloy_term, term);
 }
@@ -344,16 +366,17 @@ static int vesaterm_clear(struct AlloyTermData *term)
 			/* byte offset */
 			byte_offset *= (term->depth / 8);
 			/* set the background red pixel */
-			term->frame_buffer[byte_offset + 0] = term->background.blue;
 			term->swap_buffer[byte_offset + 0] = term->background.blue;
 			/* set the background green pixel */
-			term->frame_buffer[byte_offset + 1] = term->background.green;
 			term->swap_buffer[byte_offset + 1] = term->background.green;
 			/* set the background blue pixel */
-			term->frame_buffer[byte_offset + 2] = term->background.red;
 			term->swap_buffer[byte_offset + 2] = term->background.red;
 		}
 	}
+
+	/* update frame buffer */
+
+	vesaterm_copy_swap(term);
 
 	/* restore cursor position */
 
