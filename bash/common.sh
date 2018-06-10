@@ -29,8 +29,8 @@ function link_static {
 
 # Use GCC for linking
 LD=${CROSS_COMPILE}gcc
-# No linker flags currently
-LDFLAGS=
+# Remove unused sections.
+LDFLAGS="-Wl,--gc-sections"
 # No default libs
 LDLIBS=
 
